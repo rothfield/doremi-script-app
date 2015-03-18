@@ -1,1 +1,0 @@
-{:require [doremi-script-app.app adzerk.boot-cljs-repl adzerk.boot-reload], :init-fns [doremi-script-app.app/init]}
