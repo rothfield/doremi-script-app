@@ -1,0 +1,2 @@
+{:require  [doremi-script-app.app]
+ :init-fns [doremi-script-app.app/init]}
