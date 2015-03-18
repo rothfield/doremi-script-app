@@ -5,6 +5,8 @@
                  [adzerk/boot-cljs-repl "0.1.9"      :scope "test"]
                  [adzerk/boot-reload    "0.2.4"      :scope "test"]
                  [pandeiro/boot-http    "0.6.1"      :scope "test"]
+                 [org.clojure/clojure "1.6.0"]
+								 [cljs-http "0.1.27"]
 								 [com.lucasbradstreet/instaparse-cljs "1.3.5"]
                  [reagent "0.5.0-alpha3"]])
 

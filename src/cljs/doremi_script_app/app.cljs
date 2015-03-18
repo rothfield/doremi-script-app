@@ -1,5 +1,8 @@
 (ns doremi-script-app.app
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require 
+    [cljs-http.client :as http]
+    [cljs.core.async :refer [<!]]
     [reagent.core :as reagent :refer [atom]]
     [instaparse.core :as insta] 
     ))
@@ -22,7 +25,7 @@
     AB = A B
     A = 'a'+
     B = 'b'+"))
-    
+
 
 (def zzz
   (insta/parser
