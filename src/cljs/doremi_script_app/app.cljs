@@ -1,15 +1,26 @@
 (ns doremi-script-app.app
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require 
-    [cljs-http.client :as http]
-    [cljs.core.async :refer [<!]]
+    [goog.net.XhrIo :as xhr]
+    [cljs.core.async :refer [<! chan close!]]
     [reagent.core :as reagent :refer [atom]]
     [instaparse.core :as insta] 
     ))
 
-(defn to-s[x]
-  (.stringify js/JSON (clj->js x)))
 
+(defn GET [url]
+  (let [ch (chan 1)]
+    (xhr/send url
+              (fn [event]
+                (let [res (-> event .-target .getResponseText)]
+                  (go (>! ch res)
+                      (close! ch)))))
+    ch))
+
+
+
+
+(enable-console-print!)
 (defn my-log[x]
   (.log js/console x)) 
 
@@ -18,13 +29,47 @@
            #(my-log (.stringify js/JSON (clj->js %)))
            my-args)))
 
+(def url1
+  "http://dimagog.github.io/sitemap.txt")
 
-(def doremi-parser
+(def url2
+  "ebnf/doremiscript.ebnf.txt.html"
+  )
+
+
+
+(def grammar-text (atom ""))
+(defn to-s[x]
+  (.stringify js/JSON (clj->js x)))
+
+
+
+(def old-doremi-parser
   (insta/parser 
     "S = AB*
     AB = A B
     A = 'a'+
     B = 'b'+"))
+
+
+(def the-parser (atom {}))
+
+(defn my-callback[x]
+   (let [data (js->clj (.getResponseText (.-target x))
+                       :keywordize-keys true)]
+    (reset! the-parser (insta/parser  data))
+  )
+ ) 
+
+
+(defn load-xhr[]
+;; http://www.myclojureadventure.com/2012/09/intro-to-clojurescript-part-2-getting.html
+  (.send goog.net.XhrIo url2
+         my-callback)) 
+
+(load-xhr)
+(log "after load-xhr")
+
 
 
 (def zzz
@@ -54,19 +99,24 @@
     :name "src",
     :value (:doremi-text @app-state) 
     :on-change 
-    #(do (let [new-val
-               (-> % .-target .-value)
-               ]
-           (swap! app-state assoc-in
-                  [:doremi-text]
-                  new-val)
-           (log (doremi-parser new-val))
-           (swap! app-state assoc-in
-                  [:parse-results]
-                  (to-s (doremi-parser new-val))
-                  )
-           ) 
-         )
+    (fn[x] 
+      (let [new-val
+            (-> x .-target .-value)
+            parse-results (@the-parser new-val
+                                         :start :sargam-composition)
+
+            ]
+        (log "new-val is" new-val)
+        (log "parse-results" parse-results)
+        (swap! app-state assoc-in
+               [:doremi-text]
+               new-val)
+        (swap! app-state assoc-in
+               [:parse-results]
+               (to-s parse-results)
+               )
+        ) 
+      )
     }])
 
 (defn doremi-box[]
