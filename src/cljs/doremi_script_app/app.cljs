@@ -16,8 +16,8 @@
 (declare draw-item)
 
 (defn is-a[s v]
-  assert(and (vector? v) (= (first v) s))
-  )
+  assert(= (name (first v)) (name s)))
+ ;; assert(and (vector? v) (= (first v) s))
 (defn to-s[x]
   (.stringify js/JSON (clj->js x)))
 
@@ -250,7 +250,7 @@
    {:style
     {:overflow "hidden"  :word-wrap "break-word"  :resize "horizontal"  :height "120.106669072752px" }
     :placeholder
-    "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
+    "zEnter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
     :name "src",
     :value (:doremi-text @app-state) 
     :on-change 
@@ -270,18 +270,27 @@
       )
     }])
 
-(defn composition[parsed]
-  (let [items [1 2 3]]
-    ;;(log "entering composition, parsed=")
-    ;;(log parsed)
-    [:div.composition.doremiContent
-     (map-indexed (fn composition-aux[idx item]
-                    [:stave {:key idx} nil]
-                    ) items)
-     ]
-    ))
+(defn composition[item]
+  (log "composition, item is")
+  (log item)
+  (if (nil? item)
+    (do
+      (log "nil case")
+      [:div.composition.doremiContent
+       ]
+      )
+        [:div.composition.doremiContent
+         (map-indexed (fn composition-aux[idx my-item]
+                        (draw-item my-item idx)
+                        ) (rest item))
+         ]
+        ))
 
-(defn notes-line[item]
+(defn attribute-section[{item :item}]
+  nil
+  )
+
+(defn notes-line [{item :item}]
   (log "notes-line, item is")
   (log item)
   (assert (is-a "notes-line" item))
@@ -297,17 +306,15 @@
 ;; var items = rest(item);
 
 
-(defn line-item[h]
-  (log "entering line-item, h is")
-  (log h)
-  (assert (:src h))
-  (assert (:kind h))
+(defn line-item [{src :src kind :kind item :item}]
+  (log "entering line-item, item")
+  (log item)
   ;; className = item[0].replace(/-/g, '_');
   ;;src = "S" ;;; this.props.src;
   [:span {:class "note_wrapper"
           } 
-   [:span.note {:class (:kind h)}
-    "-"]])
+   [:span.note {:class kind}
+    src]])
 
 (defn barline-aux[x idx]
   [:span.barline.note
@@ -321,7 +328,8 @@
 
 
 
-(defn beat[item]
+(defn beat[{item :item}]
+  (log "entering beat")
   (assert (is-a "beat" item))
   (log "beat, item is")
   (log item)
@@ -410,7 +418,7 @@
 ;;;;            })
 
 
-(defn pitch-name[item]
+(defn pitch-name[{item :item}]
   (assert (is-a "pitch-name" item))
   (log "pitch-name, item is")
   (log item)
@@ -437,7 +445,7 @@
    ]
   ) 
 
-(defn pitch[item]
+(defn pitch[{item :item}]
   ;;; ["pitch","C#",["octave",1],["syl","syl"]]
   (log "pitch") 
   (assert (is-a "pitch" item))
@@ -463,7 +471,7 @@
                               ["pitch-alteration" alteration-string])
 
         item-b 
-        (into[] (cons my-pitch-alteration item-a))
+        (remove nil? (into[] (cons my-pitch-alteration item-a)))
         item2 (sort-by #(get sort-table (first %)) item-b)
         ]
     (log "item2 is")
@@ -496,19 +504,21 @@
      "he- llo there john"]))
 
 
-(defn stave[item]
-  (log "stave")
+(defn stave[{item :item}]
+  (log "entering stave")
   (log item)
-  (assert (is-a "stave" item))
-  [notes-line (first (rest item))]
+;;  (assert (is-a "stave" item))
+  [notes-line {:item (second item)}]
   )
 
 
 
-(defn measure[item]
+(defn measure[{item :item}]
   (assert (is-a "measure" item))
   (log "measure, item is")
   (log item)
+  (log "rest item=")
+  (log (rest item))
   [:span {:class "measure"} 
    (map-indexed
      (fn measure-aux[idx item]
@@ -526,7 +536,7 @@
   )
 
 
-(defn octave[item]
+(defn octave[{item :item}]
   (log "octave- item is")
   (log item)
   (assert (is-a "octave" item))
@@ -536,33 +546,40 @@
 
 
 (defn draw-item[item idx]
-  (let [my-key (first item)]
+  (log "entering draw-item, item is")
+    (log item)
+  (let [my-key (keyword (first item))]
     (log "draw-item, item is")
     (log item)
-    (case my-key
-      "pitch-alteration"
-      ^{:key idx} [pitch-alteration  item]
-      "syl"
-      ^{:key idx} [syl  item]
-      "octave"
-     ^{:key idx}  [octave  item]
-      "pitch-name"
-      ^{:key idx} [pitch-name  item]
-      "measure"
-      ^{:key idx} [measure  item]
-      "notes-line"
-      ^{:key idx} [notes-line  item]
-      "stave"
-      ^{:key idx} [stave  item]
-      "beat"
-      ^{:key idx} [beat  item]
-      "pitch"
-      ^{:key idx} [pitch  item]
-      "dash"
-      ^{:key idx} [line-item { :kind "dash" :src "-"}]
-      ^{:key idx} [:span 
-       (str "todo-draw-item" (.stringify js/JSON (clj->js item)))
-       ]
+    (log "key is")
+    (log my-key)
+    (cond 
+      (= my-key :beat)
+      [beat {:key idx :item item}]
+      (= my-key :stave)
+      [stave {:key idx :item item}]
+      (= my-key :measure)
+      [measure {:key idx :item item}]
+      (= my-key :attribute-section)
+      [attribute-section {:key idx :item item}]
+      (= my-key "pitch-alteration")
+      [pitch-alteration {:key idx :item item}]
+      (= my-key :pitch)
+         [pitch {:key idx :item item}]
+      (= my-key "syl")
+      [syl {:key idx :item item}]
+      (= my-key :octave)
+      [octave {:key idx :item item}]
+      (= my-key :pitch-name)
+      [pitch-name {:key idx :item item}]
+      (= my-key :notes-line)
+      [notes-line {:key idx :item item}]
+      (= my-key :dash)
+      [line-item {:src "-" :key idx :item item}]
+       true
+      [:span {:key idx :item item}
+             (str "todo-draw-item" (.stringify js/JSON (clj->js item)))
+                   ]
       )))
 
 
@@ -660,7 +677,6 @@
                        "g"]]]]]]
   )
 
-
 (defn doremi-box[]
   [:div.doremiBox
    [:h3
@@ -732,8 +748,82 @@
       [:img#staff_notation
        :name "",
        :src "/images/blank.png?1426699590838"]]]]
-   ;; [composition (get-in @app-state [:parse-results :parsed])
-   ;; ]
+   [composition (get-in @app-state [:parse-results,:parsed]) ]
+   ]
+  )
+
+(defn zztest-doremi-box[]
+  [:div.doremiBox
+   [:h3
+    "Enter letter music notation using 1234567CDEFGABC DoReMi (using drmfslt or DRMFSLT) SRGmPDN or devanagri: सर ग़म म'प धऩ\n\n"]
+   [:div.controls
+    [:div.selectNotationBox
+     [:label
+      "Enter Notation as: "]
+     [:select#selectNotation
+      [:option]
+      [:option
+       "ABC"]
+      [:option
+       "doremi"]
+      [:option
+       "hindi( स र ग़ म म' प ध ऩ )"]
+      [:option
+       "number"]
+      [:option
+       "sargam"]]]
+    [:div.RenderAsBox
+     [:label { :for "renderAs"} "Render as:"]
+     [:select#renderAs
+      [:option {:value ""}]
+      [:option
+       "ABC"]
+      [:option
+       "doremi"]
+      [:option
+       "hindi( स र ग़ म म' प ध ऩ )"]
+      [:option
+       "number"]
+      [:option
+       "sargam"]]]
+    [:button
+     {
+      :title "Generates staff notation and MIDI file using Lilypond",
+      :name "generateStaffNotation"}
+     "Generate Staff Notation/ MIDI/ Lilypond"]
+    [:button.toggleButton
+     "Lilypond"]
+    [:a.hidden
+     "Play MIDI File(Turn Volume Up!)"]
+
+    [:button.toggleButton
+     "Staff Notation Hide/Show"]
+    [:a
+     {
+      :href
+      "https://rawgithub.com/rothfield/doremi-script/master/test/good_test_results/report.html",
+      :target "_blank",
+      :title "Opens in new window"}
+     "Visual test suite"
+     ]
+    [:a
+     {
+      :href "https://github.com/rothfield/doremi-script#readme",
+      :target "_blank",
+      :title "Opens in new window"
+      }
+     "Help"]]
+   [:div.entryAreaBox.doremiContent
+    [entry-area]
+    ]
+   [parse-results]
+   [:div.compositionParseFailed.hidden
+    [:pre 
+     [:div.lilypondDisplay.hidden 
+      [:img#staff_notation
+       :name "",
+       :src "/images/blank.png?1426699590838"]]]]
+   [composition (get-in @app-state [:parse-results :parsed]) ]
    [:h3 "unit4
         tests"]
    [:div.sargam_line [pitch ["pitch","D#",["octave" 2]["syl""syl"]]]]
