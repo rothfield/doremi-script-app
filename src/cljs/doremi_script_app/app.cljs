@@ -13,11 +13,12 @@
     [instaparse.core :as insta] 
     ))
 
+(def log-off true)
 (declare draw-item)
 
 (defn is-a[s v]
   assert(= (name (first v)) (name s)))
- ;; assert(and (vector? v) (= (first v) s))
+;; assert(and (vector? v) (= (first v) s))
 (defn to-s[x]
   (.stringify js/JSON (clj->js x)))
 
@@ -26,9 +27,10 @@
   (.log js/console x)) 
 
 (defn log[& my-args]
-  (dorun (map 
-           #(my-log (.stringify js/JSON (clj->js %)))
-           my-args)))
+  (when-not log-off
+    (dorun (map 
+             #(my-log (.stringify js/JSON (clj->js %)))
+             my-args))))
 
 
 
@@ -36,6 +38,7 @@
 ;;;;     . The Unicode character ♭(U+266D) is the flat sign. Its HTML entity is &#9837;.
 ;;;;    In Unicode, the sharp symbol (♯) is at code point U+266F. Its HTML entity is &#9839;. The symbol for double sharp (double sharp) is at U+1D12A (so &#119082;). These characters may not display correctly in all fonts.
 ;;;;    */
+(def bullet "&bull;")
 (def sharp-symbol "&#9839;")
 (def flat-symbol  "&#9837;")
 (def lookup_simple {
@@ -198,15 +201,15 @@
   (log "pitch is")
   (log pitch)
   (case kind
-    "sargam-composition"
+    :sargam-composition
     (get lookup1 pitch)
-    "number-composition"
+    :number-composition
     (get lookup-number pitch)
-    "abc-composition"
+    :abc-composition
     (get lookup-ABC pitch)
-    "doremi-composition"
+    :doremi-composition
     (get lookup-DoReMi pitch)
-    "hindi-composition"
+    :hindi-composition
     (get lookup-hindi pitch)
     ;;default:
     (get lookup1 pitch)
@@ -229,7 +232,8 @@
 
 (defonce app-state 
   (atom 
-    {}))
+    {:composition-kind :sargam-composition
+     :render-as :sargam-composition}))
 
 
 (defn parse-results[]
@@ -257,7 +261,11 @@
     (fn[x] 
       (let [new-val
             (-> x .-target .-value)
-            parse-results (doremi-text->collapsed-parse-tree new-val nil)
+            kind  (get @app-state :composition-kind)
+           _ (.log js/console kind) 
+            ;; TODO: make this async
+            parse-results (doremi-text->collapsed-parse-tree new-val
+                                                             kind)
             ]
         (swap! app-state assoc-in
                [:doremi-text]
@@ -279,12 +287,12 @@
       [:div.composition.doremiContent
        ]
       )
-        [:div.composition.doremiContent
-         (map-indexed (fn composition-aux[idx my-item]
-                        (draw-item my-item idx)
-                        ) (rest item))
-         ]
-        ))
+    [:div.composition.doremiContent
+     (map-indexed (fn composition-aux[idx my-item]
+                    (draw-item my-item idx)
+                    ) (rest item))
+     ]
+    ))
 
 (defn attribute-section[{item :item}]
   nil
@@ -301,18 +309,26 @@
      (rest item))
 
    ])
+;; TODO
 ;;; componentDidMount: function () { window.dom_fixes($(this.getDOMNode())); },
 ;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
 ;; var items = rest(item);
 
+(defn line-number[{item :item}]
+  [:span {:class "note_wrapper" } 
+      [:span.note.line_number {:kind "line_number"}
+       (str (second item) ")")
+       ]
+   ])
 
-(defn line-item [{src :src kind :kind item :item}]
+
+(defn line-item 
+  [{src :src kind :kind item :item}]
   (log "entering line-item, item")
   (log item)
   ;; className = item[0].replace(/-/g, '_');
   ;;src = "S" ;;; this.props.src;
-  [:span {:class "note_wrapper"
-          } 
+  [:span {:class "note_wrapper" } 
    [:span.note {:class kind}
     src]])
 
@@ -334,11 +350,11 @@
   (log "beat, item is")
   (log item)
   [:span.beat.looped
-   (map-indexed
+   (doall (map-indexed
      (fn beat-aux[idx item]
        (draw-item item idx)
        )
-     (rest item))
+     (rest item)))
    ]
   )
 
@@ -445,7 +461,8 @@
    ]
   ) 
 
-(defn pitch[{item :item}]
+(defn pitch[{item :item
+             kind :kind}]
   ;;; ["pitch","C#",["octave",1],["syl","syl"]]
   (log "pitch") 
   (assert (is-a "pitch" item))
@@ -455,7 +472,7 @@
   (let [
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
-                                          "sargam-composition" 
+                                          kind 
                                           ) 
         sort-table 
         {"ornament" 1 
@@ -470,8 +487,11 @@
         my-pitch-alteration (when alteration-string
                               ["pitch-alteration" alteration-string])
 
-        item-b 
+        item-b-1 
         (remove nil? (into[] (cons my-pitch-alteration item-a)))
+        _ (log item-b-1)
+        item-b (remove (fn[x] (get #{:begin-slur-id :end-slur-id} (first x)))
+                       item-b-1)
         item2 (sort-by #(get sort-table (first %)) item-b)
         ]
     (log "item2 is")
@@ -507,7 +527,7 @@
 (defn stave[{item :item}]
   (log "entering stave")
   (log item)
-;;  (assert (is-a "stave" item))
+  ;;  (assert (is-a "stave" item))
   [notes-line {:item (second item)}]
   )
 
@@ -528,32 +548,108 @@
    ]
   )
 
-(defn syl[item]
+(defn chord[{item :item}]
+  (assert (is-a "chord" item))
+  (log "chord- item is")
+  (log item)
+  [:span.chord (second item)]
+  )
+
+(defn syl[{item :item}]
   (assert (is-a "syl" item))
   (log "syl- item is")
   (log item)
   [:span.syl (second item)]
   )
 
+(def class-for-octave
+  {nil "octave0"
+   0 "octave0"
+   -1 "lower_octave_1"
+   -2 "lower_octave_2"
+   -3 "lower_octave_3"
+   -4 "lower_octave_4"
+   1 "upper_octave_1 upper_octave_indicator"
+   2 "upper_octave_2 upper_octave_indicator"
+   3 "upper_octave_3 upper_octave_indicator"
+   4 "upper_octave_4 upper_octave_indicator"
+   5 "upper_octave_5 upper_octave_indicator"
+   }
+  )
+;;;;  
+;;;;      var Octave = createClass({
+;;;;        class_for_octave: function (octave_num) {
+;;;;          if (octave_num === null) {
+;;;;            return "octave0";
+;;;;          }
+;;;;          if (octave_num < 0) {
+;;;;            return "lower_octave_" + (octave_num * -1);
+;;;;          }
+;;;;          if (octave_num > 0) {
+;;;;            return "upper_octave_" + octave_num +
+;;;;              " upper_octave_indicator";
+;;;;          }
+;;;;          return "octave0";
+;;;;        },
+;;;;        bullet: "&bull;",
+;;;;        displayName: 'Octave',
+;;;;        render: function () {
+;;;;          var item = this.props.item;
+;;;;          if (debug) {
+;;;;            console.log(item);
+;;;;          }
+;;;;          //assert(isA("octave", item));
+;;;;          var src = this.bullet;
+;;;;          return span({
+;;;;            className: this.class_for_octave(second(item)),
+;;;;            dangerouslySetInnerHTML: {
+;;;;              __html: src
+;;;;            }
+;;;;          });
+;;;;        }
+;;;;      });
+;;;;
+
+
+(defn abs [n] (max n (- n)))
 
 (defn octave[{item :item}]
+
+  ;; TODO: support upper-upper and lower-lower
   (log "octave- item is")
   (log item)
   (assert (is-a "octave" item))
-  [:span.upper_octave_1.upper_octave_indicator
-   "•"]
-  )
+  (let [octave-num (second item)] 
+    (if (or (nil? octave-num)
+            (zero? octave-num))
+      nil
+      ;; else
+      [:span {:class (class-for-octave (second item))
+              :dangerouslySetInnerHTML {
+                                        :__html 
+                                        (clojure.string/join (repeat (abs octave-num) bullet))
+                                        }
+              } ]
+      )))
 
 
 (defn draw-item[item idx]
   (log "entering draw-item, item is")
-    (log item)
+  (log item)
   (let [my-key (keyword (first item))]
     (log "draw-item, item is")
     (log item)
     (log "key is")
     (log my-key)
     (cond 
+      (= my-key :begin-slur)
+      nil
+      (= my-key :end-slur)
+      nil
+      (= my-key :chord)
+      [chord {:key idx :item item}]
+      (= my-key :syl)
+      [syl {:key idx :item item}]
       (= my-key :beat)
       [beat {:key idx :item item}]
       (= my-key :stave)
@@ -565,7 +661,8 @@
       (= my-key "pitch-alteration")
       [pitch-alteration {:key idx :item item}]
       (= my-key :pitch)
-         [pitch {:key idx :item item}]
+      [pitch {:key idx :item item
+              :kind (get @app-state :render-as)}]
       (= my-key "syl")
       [syl {:key idx :item item}]
       (= my-key :octave)
@@ -574,12 +671,15 @@
       [pitch-name {:key idx :item item}]
       (= my-key :notes-line)
       [notes-line {:key idx :item item}]
+      (= my-key :line-number)
+      [line-number {:key idx :item item}]
+      
       (= my-key :dash)
       [line-item {:src "-" :key idx :item item}]
-       true
+      true
       [:span {:key idx :item item}
-             (str "todo-draw-item" (.stringify js/JSON (clj->js item)))
-                   ]
+       (str "todo-draw-item" (.stringify js/JSON (clj->js item)))
+       ]
       )))
 
 
@@ -676,41 +776,68 @@
                        {}
                        "g"]]]]]]
   )
+(defn select-notation-box[kind]
+  [:div.selectNotationBox
+   [:label
+    "Enter Notation as: "]
+   [:select#selectNotation
+    {:value (get @app-state :composition-kind)
+     :on-change 
+     
+     #(let
+       [kind-str (-> % .-target .-value)
+       my-kind (if (= "" kind-str)
+                 nil
+                 ;; else
+                 (keyword kind-str))
+       ]
+        (swap! app-state assoc :composition-kind my-kind)
+          )
+     } 
+    [:option]
+    [:option {:value "abc-composition"}
+     "ABC"]
+    [:option
+     "doremi"]
+    [:option
+     "hindi( स र ग़ म म' प ध ऩ )"]
+    [:option
+     "number"]
+    [:option {:value "sargam-composition"}
+     "sargam"]]]
+  )
+(defn render-as-box[]
+    [:div.RenderAsBox
+     [:label { :for "renderAs"} "Render as:"]
+     [:select#renderAs {:value (get @app-state :render-as)
+     :on-change 
+     #(do (swap! app-state 
+                 assoc
+                 :render-as
+                 (-> % .-target .-value keyword))
+          )
+                        
+                        }
+      [:option {:value ""}]
+      [:option {:value "abc-composition"}
+       "ABC"]
+      [:option {:value "doremi-composition"}
+       "doremi"]
+      [:option {:value "hindi-composition"}
+       "hindi( स र ग़ म म' प ध ऩ )"]
+      [:option {:value "number-composition"}
+       "number"]
+      [:option {:value "sargam-composition"}
+       "sargam"]]]
+)
 
 (defn doremi-box[]
   [:div.doremiBox
    [:h3
     "Enter letter music notation using 1234567CDEFGABC DoReMi (using drmfslt or DRMFSLT) SRGmPDN or devanagri: सर ग़म म'प धऩ\n\n"]
    [:div.controls
-    [:div.selectNotationBox
-     [:label
-      "Enter Notation as: "]
-     [:select#selectNotation
-      [:option]
-      [:option
-       "ABC"]
-      [:option
-       "doremi"]
-      [:option
-       "hindi( स र ग़ म म' प ध ऩ )"]
-      [:option
-       "number"]
-      [:option
-       "sargam"]]]
-    [:div.RenderAsBox
-     [:label { :for "renderAs"} "Render as:"]
-     [:select#renderAs
-      [:option {:value ""}]
-      [:option
-       "ABC"]
-      [:option
-       "doremi"]
-      [:option
-       "hindi( स र ग़ म म' प ध ऩ )"]
-      [:option
-       "number"]
-      [:option
-       "sargam"]]]
+    [select-notation-box (get @app-state :kind)]
+    [render-as-box (get @app-state :render-as)]
     [:button
      {
       :title "Generates staff notation and MIDI file using Lilypond",

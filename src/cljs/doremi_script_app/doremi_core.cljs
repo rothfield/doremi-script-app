@@ -90,6 +90,8 @@
 
 
 (defn ^:private parse[x kind]
+  (.log js/console "parse: kind is" kind) 
+
   (if kind
     (insta/parse @parser x :start kind)
     (insta/parse @parser x)
@@ -1925,6 +1927,8 @@
                    (:parsed %)))
           ]
    }
+  (.log js/console "doremi-text->collapsed-parse-tree kind is" kind) 
+
   (let [ parsed  (doremi-text->parse-tree txt kind) ]
     (when false
       (log "parsed:")
