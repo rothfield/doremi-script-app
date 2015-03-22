@@ -199,9 +199,9 @@
 
 (defn deconstruct-pitch-string-by-kind[pitch kind]
   (when false
-  (.log js/console "deconstruct-pitch-string-by-kind" " kind is:" kind) 
-  (my-log "pitch is")
-  (my-log pitch)
+    (.log js/console "deconstruct-pitch-string-by-kind" " kind is:" kind) 
+    (my-log "pitch is")
+    (my-log pitch)
     )
   (case kind
     :sargam-composition
@@ -280,43 +280,34 @@
       )
     }])
 
+(defn draw-children[items]
+  (doall (map-indexed
+           (fn notes-line-aux[idx item]
+             (draw-item item idx))
+           items)))
+
 (defn composition
   [{parsed :parsed
-                   render-as :render-as 
-                   }]
+    render-as :render-as }]
   (if (nil? parsed)
-    (do
-      (log "nil case")
       [:div.composition.doremiContent
        ]
-      )
+    ;; else
     [:div.composition.doremiContent
-     (doall (map-indexed (fn composition-aux[idx my-item]
-;;;;                     (comment
-;;;;                     (draw-item {:item my-item
-;;;;                                :key idx
-;;;;                                 :render-as render-as
-;;;;                                 }))
-                    (draw-item my-item idx)
-                    ) (rest parsed)))
-     ]
+     (draw-children (rest parsed))]
     ))
 
 (defn attribute-section[{item :item}]
   nil
   )
 
+
 (defn notes-line [{item :item}]
   (log "notes-line, item is")
   (log item)
   (assert (is-a "notes-line" item))
   [:div.stave.sargam_line
-   (doall (map-indexed
-     (fn notes-line-aux[idx item]
-       (draw-item item idx))
-     (rest item)))
-
-   ])
+   (draw-children (rest item))])
 ;; TODO
 ;;; componentDidMount: function () { window.dom_fixes($(this.getDOMNode())); },
 ;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
@@ -324,13 +315,13 @@
 
 (defn mordent[{item :item}]
   [:span.mordent
-    {:dangerouslySetInnerHTML 
-     { :__html mordent-entity }
-   }]) 
+   {:dangerouslySetInnerHTML 
+    { :__html mordent-entity }
+    }]) 
 (defn ending[{item :item}]
   [:span.ending
-    (second item)
-    ])
+   (second item)
+   ])
 
 (defn line-number[{item :item}]
   [:span.note_wrapper 
@@ -352,41 +343,38 @@
 
 (defn barline[{src :src item :item}]
   (let [barline-name (first (second item))]
-  (.log js/console "barline-name is" barline-name)
+    (.log js/console "barline-name is" barline-name)
 
-  [:span.note_wrapper
-   [:span.note.barline 
-    {:dangerouslySetInnerHTML 
-     { :__html 
-      (get lookup-barline (keyword (first (second item))))
-      }
-     }
-    ]]))
+    [:span.note_wrapper
+     [:span.note.barline 
+      {:dangerouslySetInnerHTML 
+       { :__html 
+        (get lookup-barline (keyword (first (second item))))
+        }
+       }
+      ]]))
+
 
 (defn beat[{item :item}]
   (log "entering beat")
   (assert (is-a "beat" item))
   (log "beat, item is")
   (log item)
-  [:span.beat.looped
-   (doall (map-indexed
-            (fn beat-aux[idx item]
-              (draw-item item idx)
-              )
-            (rest item)))
-   ]
-  )
-
-;;   [:span.note_wrapper
-;;       [:span.note.pitch 
-;;       "S"]]
-;; [:span.note_wrapper
-;;     [:span.note.dash 
-;;     "-"]]]
-
-
-
-
+  (let [beat-count 
+      (reduce (fn count-beats[accum cur]
+                (log "cur is" cur) 
+                (if (and (vector? cur)
+                         (get #{:pitch :dash} (first cur)))
+                  (inc accum)
+                  accum))
+              0 (rest item))
+        _ (.log js/console "beat-count is" beat-count) 
+        looped (if (> beat-count 1) "looped" "")
+        ]
+  ;; TODO
+  [:span.beat {:class looped}
+   (draw-children (rest item))
+   ]))
 
 
 ;;;;      var Pitch = createClass({
@@ -482,7 +470,7 @@
 
 (defn begin-slur-id[{item :item}]
   [:span.slur {:id (second item)}]
-)
+  )
 
 (defn pitch[{item :item
              render-as :render-as}]
@@ -509,23 +497,23 @@
   (let [
         ;; Looks like ["end-slur-id",0]
         begin-slur-id (some (fn[x] 
-                            (if
-                            (and (vector? x)
-                                      (= :begin-slur-id (first x)))
-                              x))
-                       item)
+                              (if
+                                (and (vector? x)
+                                     (= :begin-slur-id (first x)))
+                                x))
+                            item)
         end-slur-id (some (fn[x] 
                             (if
-                            (and (vector? x)
-                                      (= :end-slur-id (first x)))
+                              (and (vector? x)
+                                   (= :end-slur-id (first x)))
                               x))
-                       item)
+                          item)
         h (if end-slur-id
             {:data-begin-slur-id (second end-slur-id) }
             {})
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
-                                           render-as
+                                          render-as
                                           ) 
         sort-table 
         {:ornament 1 
@@ -540,10 +528,10 @@
                       (rest (rest item))))
         item2 (if begin-slur-id
                 (into[] (cons [:slur (second begin-slur-id)] item1))
-                 item1)
+                item1)
         item3 (if begin-slur-id
                 (into[] (cons [:slur (second begin-slur-id)] item2))
-                 item2)
+                item2)
 
         alteration-string (second deconstructed-pitch)
         my-pitch-alteration (when alteration-string
@@ -552,19 +540,14 @@
         item4 
         (remove nil? (into[] (cons my-pitch-alteration item3)))
         item5
-         (remove (fn[x] (get #{:end-slur-id :slur} (first x))) item4)
+        (remove (fn[x] (get #{:end-slur-id :slur} (first x))) item4)
         item6 (sort-by #(get sort-table (first %)) item5)
         ]
     (log "item6 is")
     ;;[["pitch-name","D#"],["octave",1],["syl","syl"]] 
     (log item6)
     [:span.note_wrapper h  ;; This indicates slur is ending and gives the id of where the slur starts. NOTE.
-     (doall
-     (map-indexed
-       (fn pitch-aux[idx item]
-         (draw-item item idx)
-         )
-       item6))
+     (draw-children item6)
      ]
     ))
 ;;;;    [:span.note_wrapper
@@ -606,13 +589,7 @@
   (log "rest item=")
   (log (rest item))
   [:span {:class "measure"} 
-   (doall (map-indexed
-     (fn measure-aux[idx item]
-       (draw-item item idx)
-       )
-     (rest item)))
-   ]
-  )
+   (draw-children (rest item))])
 
 (defn chord[{item :item}]
   (assert (is-a "chord" item))
@@ -698,13 +675,18 @@
               } ]
       )))
 
+(defn default-draw-item[{item :item}]
+  [:span {:class  (first item)}
+   (second item)
+   ]
+  )
 
 (defn draw-item[item idx]
   (when false
-  (.log js/console "entering draw-item, kind is" 
-        (get @app-state :render-as))
-  (log "entering draw-item, item is")
-  (log item)
+    (.log js/console "entering draw-item, kind is" 
+          (get @app-state :render-as))
+    (log "entering draw-item, item is")
+    (log item)
     )
   (let [my-key (keyword (first item))]
     (log "draw-item, item is")
@@ -892,10 +874,10 @@
    [:select#renderAs {:value (name (get @app-state :render-as))
                       :on-change 
                       #(swap! app-state 
-                                  assoc
-                                  :render-as
-                                  (keyword (-> % .-target .-value))
-                           )
+                              assoc
+                              :render-as
+                              (keyword (-> % .-target .-value))
+                              )
                       }
     [:option {:value nil}]
     [:option {:value :abc-composition}
@@ -956,7 +938,7 @@
        :src "/images/blank.png?1426699590838"]]]]
    [composition {:parsed (get-in @app-state [:parse-results,:parsed])
                  :render-as (get @app-state :render-as) 
-                } ]
+                 } ]
    ]
   )
 
