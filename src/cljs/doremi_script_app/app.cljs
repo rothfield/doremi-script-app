@@ -8,12 +8,13 @@
      :refer [doremi-text->collapsed-parse-tree]]
     ;;  [goog.string :as gstring]
     [goog.net.XhrIo :as xhr]
+    [clojure.string :as string :refer [join]]
     ;;  [cljs.core.async :refer [<! chan close!]]
     [reagent.core :as reagent :refer [atom]]
     [instaparse.core :as insta] 
     ))
 
-(def log-off true)
+(def log-off false)
 (declare draw-item)
 
 (defn is-a[s v]
@@ -197,9 +198,11 @@
                     })
 
 (defn deconstruct-pitch-string-by-kind[pitch kind]
-  (log "render-pitch-in-kind")
-  (log "pitch is")
-  (log pitch)
+  (when false
+  (.log js/console "deconstruct-pitch-string-by-kind" " kind is:" kind) 
+  (my-log "pitch is")
+  (my-log pitch)
+    )
   (case kind
     :sargam-composition
     (get lookup1 pitch)
@@ -216,16 +219,17 @@
     )
   )
 
+(def mordent-entity "&#x1D19D&#x1D19D")
 
 (def lookup-barline
   {
-   "single-barline" "&#x1d100",
-   "double-barline" "&#x1d101",
-   "left-repeat" "&#x1d106",
-   "mordent" "&#x1D19D&#x1D19D",
-   "right-repeat" "&#x1d107",
-   "final-barline" "&#x1d102",
-   "reverse-final-barline" "&#x1d103"
+   :single-barline "&#x1d100"
+   :double-barline "&#x1d101"
+   :left-repeat "&#x1d106"
+   :mordent "&#x1D19D&#x1D19D"
+   :right-repeat "&#x1d107"
+   :final-barline "&#x1d102"
+   :reverse-final-barline "&#x1d103"
    }
   )
 
@@ -236,33 +240,31 @@
      :render-as :sargam-composition}))
 
 
-(defn parse-results[]
-  (log "in parse-results, @app-state")
-  (log @app-state)
+(defn parse-results [{parsed :parsed }]
   [:div.form-group
    [:label {:for "parse-results"} "Parse Results:"]
    [:textarea#parse-results.form-control 
     {:rows "3" 
      :readOnly true
      :value 
-     (.stringify js/JSON (clj->js (:parse-results @app-state)))
+     (.stringify js/JSON (clj->js parsed))
      }
     ]])
 
-(defn entry-area[]
+(defn entry-area [{doremi-text :doremi-text }]
   [:textarea#the_area.entryArea
    {:style
     {:overflow "hidden"  :word-wrap "break-word"  :resize "horizontal"  :height "120.106669072752px" }
     :placeholder
-    "zEnter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
+    "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
     :name "src",
-    :value (:doremi-text @app-state) 
+    :value doremi-text
     :on-change 
     (fn[x] 
       (let [new-val
             (-> x .-target .-value)
             kind  (get @app-state :composition-kind)
-           _ (.log js/console kind) 
+            _ (.log js/console kind) 
             ;; TODO: make this async
             parse-results (doremi-text->collapsed-parse-tree new-val
                                                              kind)
@@ -278,19 +280,25 @@
       )
     }])
 
-(defn composition[item]
-  (log "composition, item is")
-  (log item)
-  (if (nil? item)
+(defn composition
+  [{parsed :parsed
+                   render-as :render-as 
+                   }]
+  (if (nil? parsed)
     (do
       (log "nil case")
       [:div.composition.doremiContent
        ]
       )
     [:div.composition.doremiContent
-     (map-indexed (fn composition-aux[idx my-item]
+     (doall (map-indexed (fn composition-aux[idx my-item]
+;;;;                     (comment
+;;;;                     (draw-item {:item my-item
+;;;;                                :key idx
+;;;;                                 :render-as render-as
+;;;;                                 }))
                     (draw-item my-item idx)
-                    ) (rest item))
+                    ) (rest parsed)))
      ]
     ))
 
@@ -303,10 +311,10 @@
   (log item)
   (assert (is-a "notes-line" item))
   [:div.stave.sargam_line
-   (map-indexed
+   (doall (map-indexed
      (fn notes-line-aux[idx item]
        (draw-item item idx))
-     (rest item))
+     (rest item)))
 
    ])
 ;; TODO
@@ -314,11 +322,21 @@
 ;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
 ;; var items = rest(item);
 
+(defn mordent[{item :item}]
+  [:span.mordent
+    {:dangerouslySetInnerHTML 
+     { :__html mordent-entity }
+   }]) 
+(defn ending[{item :item}]
+  [:span.ending
+    (second item)
+    ])
+
 (defn line-number[{item :item}]
-  [:span {:class "note_wrapper" } 
-      [:span.note.line_number {:kind "line_number"}
-       (str (second item) ")")
-       ]
+  [:span.note_wrapper 
+   [:span.note.line_number 
+    (str (second item) ")")
+    ]
    ])
 
 
@@ -332,17 +350,18 @@
    [:span.note {:class kind}
     src]])
 
-(defn barline-aux[x idx]
-  [:span.barline.note
-   {:dangerouslySetInnerHTML {:key idx
-                              :__html 
-                              (get lookup-barline "double-barline")
-                              }
-    }
-   ] 
-  )
+(defn barline[{src :src item :item}]
+  (let [barline-name (first (second item))]
+  (.log js/console "barline-name is" barline-name)
 
-
+  [:span.note_wrapper
+   [:span.note.barline 
+    {:dangerouslySetInnerHTML 
+     { :__html 
+      (get lookup-barline (keyword (first (second item))))
+      }
+     }
+    ]]))
 
 (defn beat[{item :item}]
   (log "entering beat")
@@ -351,10 +370,10 @@
   (log item)
   [:span.beat.looped
    (doall (map-indexed
-     (fn beat-aux[idx item]
-       (draw-item item idx)
-       )
-     (rest item)))
+            (fn beat-aux[idx item]
+              (draw-item item idx)
+              )
+            (rest item)))
    ]
   )
 
@@ -448,7 +467,7 @@
    ]
   )
 
-(defn pitch-alteration[item]
+(defn pitch-alteration[{item :item}]
   (log "pitch-alteration") 
   (assert (is-a "pitch-alteration" item))
   [:span.note.pitch.alteration 
@@ -461,48 +480,91 @@
    ]
   ) 
 
+(defn begin-slur-id[{item :item}]
+  [:span.slur {:id (second item)}]
+)
+
 (defn pitch[{item :item
-             kind :kind}]
+             render-as :render-as}]
+
+  (.log js/console "pitch, (first (last item))=" (first (last item))) 
+
+  ;; In the following case
+  ;; ["pitch","C",["begin-slur"],["octave",0],["begin-slur-id",0]]
+  ;; if there is "begin-slur-id, add
+  ;; <span class="slur" id="0"></span>
+  ;;  before the note span.
+  ;;
+  ;; for end slur, add data-begin-slur-id to the note-wrapper
+  ;; confusing
+  ;;
+  ;;
   ;;; ["pitch","C#",["octave",1],["syl","syl"]]
-  (log "pitch") 
+  ;;;  ["pitch","E",["end-slur"],["octave",0],["end-slur-id",0]]
+  (log "entring pitch") 
   (assert (is-a "pitch" item))
   (log item)
   ;; need to sort attributes in order:
   ;; ornament octave syl note alteration
   (let [
+        ;; Looks like ["end-slur-id",0]
+        begin-slur-id (some (fn[x] 
+                            (if
+                            (and (vector? x)
+                                      (= :begin-slur-id (first x)))
+                              x))
+                       item)
+        end-slur-id (some (fn[x] 
+                            (if
+                            (and (vector? x)
+                                      (= :end-slur-id (first x)))
+                              x))
+                       item)
+        h (if end-slur-id
+            {:data-begin-slur-id (second end-slur-id) }
+            {})
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
-                                          kind 
+                                           render-as
                                           ) 
         sort-table 
-        {"ornament" 1 
-         "octave" 2 
-         "syl" 3 
-         "pitch-name" 4 
-         "pitch-alteration" 5}
-        item-a
-        (into[] (cons ["pitch-name" (first deconstructed-pitch)]
+        {:ornament 1 
+         :octave 2 
+         :syl 3 
+         :begin-slur-id 4
+         :slur 5
+         :pitch-name 6
+         :pitch-alteration 7}
+        item1
+        (into[] (cons [:pitch-name (first deconstructed-pitch)]
                       (rest (rest item))))
+        item2 (if begin-slur-id
+                (into[] (cons [:slur (second begin-slur-id)] item1))
+                 item1)
+        item3 (if begin-slur-id
+                (into[] (cons [:slur (second begin-slur-id)] item2))
+                 item2)
+
         alteration-string (second deconstructed-pitch)
         my-pitch-alteration (when alteration-string
                               ["pitch-alteration" alteration-string])
 
-        item-b-1 
-        (remove nil? (into[] (cons my-pitch-alteration item-a)))
-        _ (log item-b-1)
-        item-b (remove (fn[x] (get #{:begin-slur-id :end-slur-id} (first x)))
-                       item-b-1)
-        item2 (sort-by #(get sort-table (first %)) item-b)
+        item4 
+        (remove nil? (into[] (cons my-pitch-alteration item3)))
+        item5
+         (remove (fn[x] (get #{:end-slur-id :slur} (first x))) item4)
+        item6 (sort-by #(get sort-table (first %)) item5)
         ]
-    (log "item2 is")
+    (log "item6 is")
     ;;[["pitch-name","D#"],["octave",1],["syl","syl"]] 
-    (log item2)
-    [:span.note_wrapper
+    (log item6)
+    [:span.note_wrapper h  ;; This indicates slur is ending and gives the id of where the slur starts. NOTE.
+     (doall
      (map-indexed
        (fn pitch-aux[idx item]
          (draw-item item idx)
          )
-       item2)
+       item6))
      ]
     ))
 ;;;;    [:span.note_wrapper
@@ -514,14 +576,18 @@
 ;;;;         "S"]
 ;;;;        [:span.note.pitch.alteration
 ;;;;             "♯"]]
-(defn lyrics-section[lyrics-section-data]
+(defn lyrics-section [{item :item}]
+  ;; ["lyrics-section",["lyrics-line","first","line","of","ly-","rics"],["lyrics-line","se-","cond","line","of","ly-","rics"]]
   ;; assert(isA("lyrics-section", lyricsSection))
   ;; return rest(x) .join(" ");
   ;;
-  (let [app-state @app-state]
+  (let [line-strings (map (fn[x] (join " " (rest x))) (rest item))
+        s (join "\n" line-strings)    
+        ]
+
     [:div.stave.lyrics_section.unhyphenated
      {:title "Lyrics Section"}
-     "he- llo there john"]))
+     s]))
 
 
 (defn stave[{item :item}]
@@ -540,11 +606,11 @@
   (log "rest item=")
   (log (rest item))
   [:span {:class "measure"} 
-   (map-indexed
+   (doall (map-indexed
      (fn measure-aux[idx item]
        (draw-item item idx)
        )
-     (rest item))
+     (rest item)))
    ]
   )
 
@@ -634,8 +700,12 @@
 
 
 (defn draw-item[item idx]
+  (when false
+  (.log js/console "entering draw-item, kind is" 
+        (get @app-state :render-as))
   (log "entering draw-item, item is")
   (log item)
+    )
   (let [my-key (keyword (first item))]
     (log "draw-item, item is")
     (log item)
@@ -646,6 +716,14 @@
       nil
       (= my-key :end-slur)
       nil
+      (= my-key :mordent)
+      [mordent {:key idx :item item}]
+      (= my-key :ending)
+      [ending {:key idx :item item}]
+      (= my-key :barline)
+      [barline {:key idx :item item}]
+      (= my-key :lyrics-section)
+      [lyrics-section {:key idx :item item}]
       (= my-key :chord)
       [chord {:key idx :item item}]
       (= my-key :syl)
@@ -656,13 +734,15 @@
       [stave {:key idx :item item}]
       (= my-key :measure)
       [measure {:key idx :item item}]
+      (= my-key :begin-slur-id)
+      [begin-slur-id {:key idx :item item}]
       (= my-key :attribute-section)
       [attribute-section {:key idx :item item}]
-      (= my-key "pitch-alteration")
+      (= my-key :pitch-alteration)
       [pitch-alteration {:key idx :item item}]
       (= my-key :pitch)
       [pitch {:key idx :item item
-              :kind (get @app-state :render-as)}]
+              :render-as (get @app-state :render-as)}]
       (= my-key "syl")
       [syl {:key idx :item item}]
       (= my-key :octave)
@@ -673,7 +753,7 @@
       [notes-line {:key idx :item item}]
       (= my-key :line-number)
       [line-number {:key idx :item item}]
-      
+
       (= my-key :dash)
       [line-item {:src "-" :key idx :item item}]
       true
@@ -783,53 +863,52 @@
    [:select#selectNotation
     {:value (get @app-state :composition-kind)
      :on-change 
-     
+
      #(let
-       [kind-str (-> % .-target .-value)
-       my-kind (if (= "" kind-str)
-                 nil
-                 ;; else
-                 (keyword kind-str))
-       ]
+        [kind-str (-> % .-target .-value)
+         my-kind (if (= "" kind-str)
+                   nil
+                   ;; else
+                   (keyword kind-str))
+         ]
         (swap! app-state assoc :composition-kind my-kind)
-          )
+        )
      } 
     [:option]
-    [:option {:value "abc-composition"}
+    [:option {:value :abc-composition}
      "ABC"]
-    [:option
+    [:option {:value :doremi-composition}
      "doremi"]
-    [:option
+    [:option {:value :hindi-composition}
      "hindi( स र ग़ म म' प ध ऩ )"]
-    [:option
+    [:option {:value :number-composition}
      "number"]
-    [:option {:value "sargam-composition"}
+    [:option {:value :sargam-composition}
      "sargam"]]]
   )
 (defn render-as-box[]
-    [:div.RenderAsBox
-     [:label { :for "renderAs"} "Render as:"]
-     [:select#renderAs {:value (get @app-state :render-as)
-     :on-change 
-     #(do (swap! app-state 
-                 assoc
-                 :render-as
-                 (-> % .-target .-value keyword))
-          )
-                        
-                        }
-      [:option {:value ""}]
-      [:option {:value "abc-composition"}
-       "ABC"]
-      [:option {:value "doremi-composition"}
-       "doremi"]
-      [:option {:value "hindi-composition"}
-       "hindi( स र ग़ म म' प ध ऩ )"]
-      [:option {:value "number-composition"}
-       "number"]
-      [:option {:value "sargam-composition"}
-       "sargam"]]]
-)
+  [:div.RenderAsBox
+   [:label { :for "renderAs"} "Render as:"]
+   [:select#renderAs {:value (name (get @app-state :render-as))
+                      :on-change 
+                      #(swap! app-state 
+                                  assoc
+                                  :render-as
+                                  (keyword (-> % .-target .-value))
+                           )
+                      }
+    [:option {:value nil}]
+    [:option {:value :abc-composition}
+     "ABC"]
+    [:option {:value :doremi-composition}
+     "doremi"]
+    [:option {:value :hindi-composition}
+     "hindi( स र ग़ म म' प ध ऩ )"]
+    [:option {:value :number-composition}
+     "number"]
+    [:option {:value :sargam-composition}
+     "sargam"]]]
+  )
 
 (defn doremi-box[]
   [:div.doremiBox
@@ -866,111 +945,21 @@
       }
      "Help"]]
    [:div.entryAreaBox.doremiContent
-    [entry-area]
+    [entry-area {:doremi-text (get @app-state :doremi-text)}]
     ]
-   [parse-results]
+   [parse-results {:parsed (get-in @app-state [:parse-results,:parsed])}]
    [:div.compositionParseFailed.hidden
     [:pre 
      [:div.lilypondDisplay.hidden 
       [:img#staff_notation
        :name "",
        :src "/images/blank.png?1426699590838"]]]]
-   [composition (get-in @app-state [:parse-results,:parsed]) ]
+   [composition {:parsed (get-in @app-state [:parse-results,:parsed])
+                 :render-as (get @app-state :render-as) 
+                } ]
    ]
   )
 
-(defn zztest-doremi-box[]
-  [:div.doremiBox
-   [:h3
-    "Enter letter music notation using 1234567CDEFGABC DoReMi (using drmfslt or DRMFSLT) SRGmPDN or devanagri: सर ग़म म'प धऩ\n\n"]
-   [:div.controls
-    [:div.selectNotationBox
-     [:label
-      "Enter Notation as: "]
-     [:select#selectNotation
-      [:option]
-      [:option
-       "ABC"]
-      [:option
-       "doremi"]
-      [:option
-       "hindi( स र ग़ म म' प ध ऩ )"]
-      [:option
-       "number"]
-      [:option
-       "sargam"]]]
-    [:div.RenderAsBox
-     [:label { :for "renderAs"} "Render as:"]
-     [:select#renderAs
-      [:option {:value ""}]
-      [:option
-       "ABC"]
-      [:option
-       "doremi"]
-      [:option
-       "hindi( स र ग़ म म' प ध ऩ )"]
-      [:option
-       "number"]
-      [:option
-       "sargam"]]]
-    [:button
-     {
-      :title "Generates staff notation and MIDI file using Lilypond",
-      :name "generateStaffNotation"}
-     "Generate Staff Notation/ MIDI/ Lilypond"]
-    [:button.toggleButton
-     "Lilypond"]
-    [:a.hidden
-     "Play MIDI File(Turn Volume Up!)"]
-
-    [:button.toggleButton
-     "Staff Notation Hide/Show"]
-    [:a
-     {
-      :href
-      "https://rawgithub.com/rothfield/doremi-script/master/test/good_test_results/report.html",
-      :target "_blank",
-      :title "Opens in new window"}
-     "Visual test suite"
-     ]
-    [:a
-     {
-      :href "https://github.com/rothfield/doremi-script#readme",
-      :target "_blank",
-      :title "Opens in new window"
-      }
-     "Help"]]
-   [:div.entryAreaBox.doremiContent
-    [entry-area]
-    ]
-   [parse-results]
-   [:div.compositionParseFailed.hidden
-    [:pre 
-     [:div.lilypondDisplay.hidden 
-      [:img#staff_notation
-       :name "",
-       :src "/images/blank.png?1426699590838"]]]]
-   [composition (get-in @app-state [:parse-results :parsed]) ]
-   [:h3 "unit4
-        tests"]
-   [:div.sargam_line [pitch ["pitch","D#",["octave" 2]["syl""syl"]]]]
-   ;;;;    [:h4 "stave"]
-   ;;;;    [stave ["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]]]]]]]
-   ;;;;    [:div.sargam_line
-   ;;;;     [beat ["beat",["pitch","C",["octave",0]],["dash"],["dash"]]]]
-   ;;;;    [lyrics-section ["lyrics-line","he-","llo","john"]] 
-   ;;;;    [:div.sargam_line [pitch ["pitch","C",["octave",0]]]]
-   ;;;;    [:div [:br]]
-   ;;;;    [:div.sargam_line [pitch ["pitch","C#",["octave",1],["syl","syl"]]]]
-   ;;;;    [:span "barline follows"]
-   ;;;;    [:div
-   ;;;;     {:dangerouslySetInnerHTML {:__html 
-   ;;;;                                (str "barline here?" (get lookup-barline "double-barline"))
-   ;;;;                                }
-   ;;;;      }
-   ;;;;     ] 
-   ]
-  )
 
 (defn calling-component []
   [doremi-box])

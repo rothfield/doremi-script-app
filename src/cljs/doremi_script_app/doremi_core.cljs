@@ -1927,8 +1927,9 @@
                    (:parsed %)))
           ]
    }
+  (when false
   (.log js/console "doremi-text->collapsed-parse-tree kind is" kind) 
-
+)
   (let [ parsed  (doremi-text->parse-tree txt kind) ]
     (when false
       (log "parsed:")
