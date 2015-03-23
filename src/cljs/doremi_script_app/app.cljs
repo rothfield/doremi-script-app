@@ -33,12 +33,44 @@
              #(my-log (.stringify js/JSON (clj->js %)))
              my-args))))
 
-
-
+(defn class-name-for[x]
+   (string/replace (name x) "-" "_")
+  )
+(my-log (class-name-for :sargam-line))
 ;;;;     
 ;;;;     . The Unicode character ♭(U+266D) is the flat sign. Its HTML entity is &#9837;.
 ;;;;    In Unicode, the sharp symbol (♯) is at code point U+266F. Its HTML entity is &#9839;. The symbol for double sharp (double sharp) is at U+1D12A (so &#119082;). These characters may not display correctly in all fonts.
 ;;;;    */
+
+(def class-for-octave
+  {nil "octave0"
+   0 "octave0"
+   -1 "lower_octave_1"
+   -2 "lower_octave_2"
+   -3 "lower_octave_3"
+   -4 "lower_octave_4"
+   1 "upper_octave_1 upper_octave_indicator"
+   2 "upper_octave_2 upper_octave_indicator"
+   3 "upper_octave_3 upper_octave_indicator"
+   4 "upper_octave_4 upper_octave_indicator"
+   5 "upper_octave_5 upper_octave_indicator"
+   }
+  )
+(def class-for-ornament-octave
+  {nil "octave0"
+   0 "octave0"
+   -1 "lower_octave_1"
+   -2 "lower_octave_2"
+   -3 "lower_octave_3"
+   -4 "lower_octave_4"
+   1 "upper_octave_1"
+   2 "upper_octave_2"
+   3 "upper_octave_3"
+   4 "upper_octave_4"
+   5 "upper_octave_5"
+   }
+  )
+
 (def bullet "&bull;")
 (def sharp-symbol "&#9839;")
 (def flat-symbol  "&#9837;")
@@ -302,6 +334,7 @@
   )
 
 
+
 (defn notes-line [{item :item}]
   (log "notes-line, item is")
   (log item)
@@ -312,6 +345,90 @@
 ;;; componentDidMount: function () { window.dom_fixes($(this.getDOMNode())); },
 ;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
 ;; var items = rest(item);
+
+(def notes-line-wrapper 
+  (with-meta notes-line
+             {:component-did-mount
+                (fn[this]
+                  (js/dom_fixes (js/$ (reagent/dom-node this))))
+              
+             :component-did-update
+                (fn[this](js/dom_fixes (js/$ (reagent/dom-node this)))) 
+              }
+             ))
+
+
+;;;;       render: function () {
+;;;;         var item = this.props.item;
+;;;;         var placement = last(item)
+;;;;         var items = rest(item);
+;;;;         var filtered = items.filter(function (x) {
+;;;;           return isArray(x)
+;;;;         })
+;;;;         var ary = filtered.map(drawItem.bind(this));
+;;;;         return span({
+;;;;           className: "upper_attribute" + " " +
+;;;;             classNameFor(item) + " " + "placement_" +
+;;;;             placement,
+;;;;         }, ary)
+;;;;       }
+
+(defn ornament-pitch[{item :item
+             render-as :render-as}]
+  ;; item looks like:
+  ;; ;; ["ornament",["ornament-pitch","B",["octave",1]]
+;; [:span.ornament_item.upper_octave_1 "g"]
+  (log "entering ornament-pitch") 
+  (log item)
+  (let [
+        deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
+        (deconstruct-pitch-string-by-kind (second item)
+                                          render-as
+                                          ) 
+        octave (some #(when (and (vector %)
+                           (= :octave (first %)))
+                         (second %)) 
+                        (rest item))
+        alteration-string (second deconstructed-pitch)
+        pitch-src (join deconstructed-pitch)
+        octave_class (get class-for-ornament-octave octave)
+        ]
+    [:span.ornament_item 
+     {:class octave_class
+                        :dangerouslySetInnerHTML {
+                          :__html pitch-src
+                                                 } 
+                          }
+     ]
+    ))
+
+(defn ornament[{item :item}]
+  ;; should generate something like this:
+  (comment
+    [:span.upper_attribute.ornament.placement_after
+        [:span.ornament_item.upper_octave_1
+             "g"]])
+  (let [items (rest item)
+        filtered (filter #(and (vector? %)
+                             (= :ornament-pitch (first %))) items)
+        _ (log "filtered " filtered)  
+      
+        placement (last item)
+        placement-class (str "placement_" (name placement))
+        ]
+    [:span.upper_attribute.ornament {:class placement-class}
+  (doall (map-indexed
+           (fn notes-line-aux[idx item]
+             [ornament-pitch {:item item
+                             :render-as (get @app-state :render-as)
+                              :key idx
+                              }
+             ]) filtered)) 
+             ] 
+     ))
+     
+
+
 
 (defn mordent[{item :item}]
   [:span.mordent
@@ -442,7 +559,7 @@
 
 
 (defn pitch-name[{item :item}]
-  (assert (is-a "pitch-name" item))
+ ;; (assert (is-a "pitch-name" item))
   (log "pitch-name, item is")
   (log item)
   (log (second item))
@@ -490,7 +607,7 @@
   ;;; ["pitch","C#",["octave",1],["syl","syl"]]
   ;;;  ["pitch","E",["end-slur"],["octave",0],["end-slur-id",0]]
   (log "entring pitch") 
-  (assert (is-a "pitch" item))
+;;  (assert (is-a "pitch" item))
   (log item)
   ;; need to sort attributes in order:
   ;; ornament octave syl note alteration
@@ -510,7 +627,9 @@
                           item)
         h (if end-slur-id
             {:data-begin-slur-id (second end-slur-id) }
-            {})
+            {}
+           :class (class-name-for (first item)) 
+            )
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
                                           render-as
@@ -550,6 +669,9 @@
      (draw-children item6)
      ]
     ))
+
+
+
 ;;;;    [:span.note_wrapper
 ;;;;        [:span.upper_octave_1.upper_octave_indicator
 ;;;;             "•"]
@@ -577,7 +699,7 @@
   (log "entering stave")
   (log item)
   ;;  (assert (is-a "stave" item))
-  [notes-line {:item (second item)}]
+  [notes-line-wrapper {:item (second item)}]
   )
 
 
@@ -605,20 +727,6 @@
   [:span.syl (second item)]
   )
 
-(def class-for-octave
-  {nil "octave0"
-   0 "octave0"
-   -1 "lower_octave_1"
-   -2 "lower_octave_2"
-   -3 "lower_octave_3"
-   -4 "lower_octave_4"
-   1 "upper_octave_1 upper_octave_indicator"
-   2 "upper_octave_2 upper_octave_indicator"
-   3 "upper_octave_3 upper_octave_indicator"
-   4 "upper_octave_4 upper_octave_indicator"
-   5 "upper_octave_5 upper_octave_indicator"
-   }
-  )
 ;;;;  
 ;;;;      var Octave = createClass({
 ;;;;        class_for_octave: function (octave_num) {
@@ -698,6 +806,8 @@
       nil
       (= my-key :end-slur)
       nil
+      (= my-key :ornament)
+      [ornament {:key idx :item item}]
       (= my-key :mordent)
       [mordent {:key idx :item item}]
       (= my-key :ending)
@@ -722,6 +832,9 @@
       [attribute-section {:key idx :item item}]
       (= my-key :pitch-alteration)
       [pitch-alteration {:key idx :item item}]
+      (= my-key :ornament-pitch)
+      [ornament-pitch {:key idx :item item
+              :render-as (get @app-state :render-as)}]
       (= my-key :pitch)
       [pitch {:key idx :item item
               :render-as (get @app-state :render-as)}]

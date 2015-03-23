@@ -1,0 +1,5 @@
+(def item ["ornament",["ornament-pitch","B",["octave",1]])
+(def item ["ornament",["ornament-pitch","B"]]])
+(def item ["ornament",["ornament-pitch","B"]])
+(nth item 2)
+(get {1 2} 1)
