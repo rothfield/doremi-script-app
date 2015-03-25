@@ -4,10 +4,13 @@
     [clojure.zip :as zip]
     [clojure.string :refer
      [split replace-first upper-case lower-case join] :as string]
+    [cljs.reader :refer [read-string]]
     [clojure.walk :refer [postwalk]]
     [instaparse.core :as insta] 
     [instaparse.viz :as viz]
     ))
+
+
 
 (.log js/console "loading doremi_core") 
 
@@ -20,18 +23,6 @@
 (defn log[ my-arg]
   (my-log (.stringify js/JSON (clj->js my-arg))))
 
-
-;(ns doremi_script.doremi_core
-;  (:gen-class)
-;  (:require
-;    [instaparse.core :as insta]
-;    [clojure.string :refer
-;     [split replace-first upper-case lower-case join] :as string]
-;    [clojure.zip :as zip]
-;    [clojure.java.io :as io :refer [input-stream resource]]
-;    [clojure.pprint :refer [pprint]]
-;    [clojure.walk :refer [postwalk]]
-;    ))
 
 (declare doremi-text->parse-tree
          doremi-text->collapsed-parse-tree
@@ -51,9 +42,7 @@
   )
 
 (defn pprint[x]
-  ;; TODO
-  )
-
+  (.log js/console x)) 
 
 
 (defonce parser (atom nil))
@@ -71,22 +60,31 @@
   ;;;   :optimize :memory   (when possible, employ strategy to use less memory)
   ;;;
   ;; http://www.myclojureadventure.com/2012/09/intro-to-clojurescript-part-2-getting.html
-
+  (.log js/console "loading serialized-grammar from ebnf/grammar.txt") 
   (if (nil? @grammar)
     (.send goog.net.XhrIo 
-           "ebnf/doremiscript.ebnf.txt"
+           "ebnf/grammar.txt" ;; serialized
+           ;;"ebnf/doremiscript.ebnf.txt"
            (fn load-grammar-callback[x]
              (let [data (js->clj (.getResponseText (.-target x))
                                  :keywordize-keys true)]
-               (reset! grammar data) ;; for debugging
-               (reset! parser (insta/parser data :total true))
-               (log "parser initialized")
+               (reset! grammar (read-string data)) ;; for debugging
+               ;;   (.log js/console "grammar:" "\n" (prn @grammar)) 
+               (reset! parser (insta/parser @grammar :start :sargam-composition :total true))
+               (.log js/console "grammar initialized") 
                )))
     (log "skipping reloading of grammar/parser") 
     ))
 
 (load-grammar)
 
+;;(.log js/console "grammar:" "\n" (prn @grammar)) 
+(when false
+  (binding [*print-dup* true] 
+    (.log js/console "using prn-str" 
+          (with-out-str (prn (:grammar @parser)))
+          )
+    ))
 
 
 (defn ^:private parse[x kind]
@@ -1928,8 +1926,8 @@
           ]
    }
   (when false
-  (.log js/console "doremi-text->collapsed-parse-tree kind is" kind) 
-)
+    (.log js/console "doremi-text->collapsed-parse-tree kind is" kind) 
+    )
   (let [ parsed  (doremi-text->parse-tree txt kind) ]
     (when false
       (log "parsed:")
