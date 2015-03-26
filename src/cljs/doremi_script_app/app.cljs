@@ -4,17 +4,27 @@
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
+    [doremi-script-app.utils :refer [log] ]
     [doremi-script-app.doremi_core :as doremi_core
-     :refer [doremi-text->collapsed-parse-tree]]
+     :refer [doremi-text->collapsed-parse-tree to-lilypond]]
     ;;  [goog.string :as gstring]
     [goog.net.XhrIo :as xhr]
+    [goog.json :as gjson]
     [clojure.string :as string :refer [join]]
     ;;  [cljs.core.async :refer [<! chan close!]]
     [reagent.core :as reagent :refer [atom]]
     [instaparse.core :as insta] 
     ))
 
-(def log-off false)
+(defonce app-state
+  (atom 
+    {:composition-kind :sargam-composition
+     :render-as :sargam-composition
+     :staff-notation-path nil 
+     }))
+
+
+(def log-off true)
 (declare draw-item)
 
 (defn is-a[s v]
@@ -24,19 +34,54 @@
   (.stringify js/JSON (clj->js x)))
 
 (enable-console-print!)
-(defn my-log[x]
-  (.log js/console x)) 
-
-(defn log[& my-args]
-  (when-not log-off
-    (dorun (map 
-             #(my-log (.stringify js/JSON (clj->js %)))
-             my-args))))
 
 (defn class-name-for[x]
-   (string/replace (name x) "-" "_")
+  (string/replace (name x) "-" "_")
   )
-(my-log (class-name-for :sargam-line))
+
+(defn my-url-encode[s]
+  "Returns s as an URL encoded string."
+  (when s (-> (js/encodeURIComponent (str s))
+              (string/replace "*" "%2A"))))
+
+
+;;(defn ajax-json [formName]  (let [action         (str (get-form-action formName) ".json")        formData     (.toObject (.getFormDataMap goog.dom.forms (dom/$ formName)))        serialized    (goog.json.serialize formData)]        (.send goog.net.XhrIo action callback  'POST' serialized )))
+
+(def generate-staff-notation-URL
+  "http://ragapedia.com:3000/generate_staff_notation")
+
+
+
+(defn generate-staff-notation-xhr [url content]
+  (log "entering generate-staff-notation-URL" url content)
+  (let [
+        serialized (str "src=" 
+                        (my-url-encode (:src content))
+                        "&kind="
+                        (my-url-encode (name (:kind content)))
+                        )
+        serialized2 "src=SSS&kind=sargam-composition"
+        ]
+    (log url serialized)    
+    (xhr/send url
+              (fn [event]
+                (log "in callback")
+                (let [raw-response (.-target event)
+                      response-text (.getResponseText raw-response)
+                      my-map (-> response-text
+                                 gjson/parse
+                                 (js->clj :keywordize-keys true)
+                                 )
+                      ]
+                  (log "in callback my-map" my-map)
+                  (swap! app-state assoc :staff-notation-url
+                         (str "http://ragapedia.com:3000" 
+                              (:staffNotationPath my-map)))
+                  (log "app-state is" @app-state)
+                  ))
+              "POST"
+              serialized)))
+
 ;;;;     
 ;;;;     . The Unicode character ♭(U+266D) is the flat sign. Its HTML entity is &#9837;.
 ;;;;    In Unicode, the sharp symbol (♯) is at code point U+266F. Its HTML entity is &#9839;. The symbol for double sharp (double sharp) is at U+1D12A (so &#119082;). These characters may not display correctly in all fonts.
@@ -230,11 +275,9 @@
                     })
 
 (defn deconstruct-pitch-string-by-kind[pitch kind]
-  (when false
-    (.log js/console "deconstruct-pitch-string-by-kind" " kind is:" kind) 
-    (my-log "pitch is")
-    (my-log pitch)
-    )
+    (log "deconstruct-pitch-string-by-kind" " kind is:" kind) 
+    (log "pitch is")
+    (log pitch)
   (case kind
     :sargam-composition
     (get lookup1 pitch)
@@ -266,10 +309,6 @@
   )
 
 
-(defonce app-state 
-  (atom 
-    {:composition-kind :sargam-composition
-     :render-as :sargam-composition}))
 
 
 (defn parse-results [{parsed :parsed }]
@@ -277,11 +316,43 @@
    [:label {:for "parse-results"} "Parse Results:"]
    [:textarea#parse-results.form-control 
     {:rows "3" 
+     :spellcheck false
      :readOnly true
      :value 
      (.stringify js/JSON (clj->js parsed))
      }
     ]])
+
+
+
+;;;;     parse: function () {
+;;;;       var current = $('#the_area')
+;;;;         .val()
+;;;;       if (debug) {
+;;;;         console.log("parse")
+;;;;       }
+;;;;       if (this.state.data.ajaxIsRunning) {
+;;;;         return
+;;;;       }
+;;;;       if (this.state.data.lastTxtParsed === current) {
+;;;;         return
+;;;;       }
+;;;;       if (current === "") {
+;;;;         return
+;;;;       }
+;;;;       this.setState({
+;;;;         data: merge(this.state.data, {
+;;;;           lastTxtParsed: current
+;;;;         })
+;;;;       })
+;;;;       this.ajaxCall($('#the_area')
+;;;;         .val(), false, this.state.data.kind);
+;;;;     },
+
+
+
+
+
 
 (defn entry-area [{doremi-text :doremi-text }]
   [:textarea#the_area.entryArea
@@ -291,24 +362,22 @@
     "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
     :name "src",
     :value doremi-text
+     :spellCheck false
     :on-change 
     (fn[x] 
       (let [new-val
             (-> x .-target .-value)
-            kind  (get @app-state :composition-kind)
-            _ (.log js/console kind) 
+            ;; _ (.log js/console kind) 
             ;; TODO: make this async
-            parse-results (doremi-text->collapsed-parse-tree new-val
-                                                             kind)
+          ;;  parse-results (doremi-text->collapsed-parse-tree new-val
+           ;;                                                  kind)
             ]
         (swap! app-state assoc-in
                [:doremi-text]
                new-val)
-        (swap! app-state assoc-in
-               [:parse-results]
-               parse-results)
 
         ) 
+       ;; (parse)
       )
     }])
 
@@ -318,12 +387,19 @@
              (draw-item item idx))
            items)))
 
+(defn staff-notation[]
+  (let [src (get @app-state :staff-notation-url)]
+    (when src
+      [:img#staff_notation
+       {:src src}]
+      )))
+
 (defn composition
   [{parsed :parsed
     render-as :render-as }]
   (if (nil? parsed)
-      [:div.composition.doremiContent
-       ]
+    [:div.composition.doremiContent
+     ]
     ;; else
     [:div.composition.doremiContent
      (draw-children (rest parsed))]
@@ -349,11 +425,11 @@
 (def notes-line-wrapper 
   (with-meta notes-line
              {:component-did-mount
-                (fn[this]
-                  (js/dom_fixes (js/$ (reagent/dom-node this))))
-              
-             :component-did-update
-                (fn[this](js/dom_fixes (js/$ (reagent/dom-node this)))) 
+              (fn[this]
+                (js/dom_fixes (js/$ (reagent/dom-node this))))
+
+              :component-did-update
+              (fn[this](js/dom_fixes (js/$ (reagent/dom-node this)))) 
               }
              ))
 
@@ -374,10 +450,10 @@
 ;;;;       }
 
 (defn ornament-pitch[{item :item
-             render-as :render-as}]
+                      render-as :render-as}]
   ;; item looks like:
   ;; ;; ["ornament",["ornament-pitch","B",["octave",1]]
-;; [:span.ornament_item.upper_octave_1 "g"]
+  ;; [:span.ornament_item.upper_octave_1 "g"]
   (log "entering ornament-pitch") 
   (log item)
   (let [
@@ -386,19 +462,19 @@
                                           render-as
                                           ) 
         octave (some #(when (and (vector %)
-                           (= :octave (first %)))
-                         (second %)) 
-                        (rest item))
+                                 (= :octave (first %)))
+                        (second %)) 
+                     (rest item))
         alteration-string (second deconstructed-pitch)
         pitch-src (join deconstructed-pitch)
         octave_class (get class-for-ornament-octave octave)
         ]
     [:span.ornament_item 
      {:class octave_class
-                        :dangerouslySetInnerHTML {
-                          :__html pitch-src
-                                                 } 
-                          }
+      :dangerouslySetInnerHTML {
+                                :__html pitch-src
+                                } 
+      }
      ]
     ))
 
@@ -406,27 +482,27 @@
   ;; should generate something like this:
   (comment
     [:span.upper_attribute.ornament.placement_after
-        [:span.ornament_item.upper_octave_1
-             "g"]])
+     [:span.ornament_item.upper_octave_1
+      "g"]])
   (let [items (rest item)
         filtered (filter #(and (vector? %)
-                             (= :ornament-pitch (first %))) items)
+                               (= :ornament-pitch (first %))) items)
         _ (log "filtered " filtered)  
-      
+
         placement (last item)
         placement-class (str "placement_" (name placement))
         ]
     [:span.upper_attribute.ornament {:class placement-class}
-  (doall (map-indexed
-           (fn notes-line-aux[idx item]
-             [ornament-pitch {:item item
-                             :render-as (get @app-state :render-as)
-                              :key idx
-                              }
-             ]) filtered)) 
-             ] 
-     ))
-     
+     (doall (map-indexed
+              (fn notes-line-aux[idx item]
+                [ornament-pitch {:item item
+                                 :render-as (get @app-state :render-as)
+                                 :key idx
+                                 }
+                 ]) filtered)) 
+     ] 
+    ))
+
 
 
 
@@ -478,20 +554,20 @@
   (log "beat, item is")
   (log item)
   (let [beat-count 
-      (reduce (fn count-beats[accum cur]
-                (log "cur is" cur) 
-                (if (and (vector? cur)
-                         (get #{:pitch :dash} (first cur)))
-                  (inc accum)
-                  accum))
-              0 (rest item))
-        _ (.log js/console "beat-count is" beat-count) 
+        (reduce (fn count-beats[accum cur]
+                  (log "cur is" cur) 
+                  (if (and (vector? cur)
+                           (get #{:pitch :dash} (first cur)))
+                    (inc accum)
+                    accum))
+                0 (rest item))
+        _ (log "beat-count is" beat-count) 
         looped (if (> beat-count 1) "looped" "")
         ]
-  ;; TODO
-  [:span.beat {:class looped}
-   (draw-children (rest item))
-   ]))
+    ;; TODO
+    [:span.beat {:class looped}
+     (draw-children (rest item))
+     ]))
 
 
 ;;;;      var Pitch = createClass({
@@ -559,7 +635,7 @@
 
 
 (defn pitch-name[{item :item}]
- ;; (assert (is-a "pitch-name" item))
+  ;; (assert (is-a "pitch-name" item))
   (log "pitch-name, item is")
   (log item)
   (log (second item))
@@ -592,7 +668,7 @@
 (defn pitch[{item :item
              render-as :render-as}]
 
-  (.log js/console "pitch, (first (last item))=" (first (last item))) 
+  (log "pitch, (first (last item))=" (first (last item))) 
 
   ;; In the following case
   ;; ["pitch","C",["begin-slur"],["octave",0],["begin-slur-id",0]]
@@ -607,7 +683,7 @@
   ;;; ["pitch","C#",["octave",1],["syl","syl"]]
   ;;;  ["pitch","E",["end-slur"],["octave",0],["end-slur-id",0]]
   (log "entring pitch") 
-;;  (assert (is-a "pitch" item))
+  ;;  (assert (is-a "pitch" item))
   (log item)
   ;; need to sort attributes in order:
   ;; ornament octave syl note alteration
@@ -628,7 +704,7 @@
         h (if end-slur-id
             {:data-begin-slur-id (second end-slur-id) }
             {}
-           :class (class-name-for (first item)) 
+            :class (class-name-for (first item)) 
             )
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
@@ -790,12 +866,10 @@
   )
 
 (defn draw-item[item idx]
-  (when false
-    (.log js/console "entering draw-item, kind is" 
+    (log "entering draw-item, kind is" 
           (get @app-state :render-as))
     (log "entering draw-item, item is")
     (log item)
-    )
   (let [my-key (keyword (first item))]
     (log "draw-item, item is")
     (log item)
@@ -834,7 +908,7 @@
       [pitch-alteration {:key idx :item item}]
       (= my-key :ornament-pitch)
       [ornament-pitch {:key idx :item item
-              :render-as (get @app-state :render-as)}]
+                       :render-as (get @app-state :render-as)}]
       (= my-key :pitch)
       [pitch {:key idx :item item
               :render-as (get @app-state :render-as)}]
@@ -1005,6 +1079,22 @@
      "sargam"]]]
   )
 
+(defn generate-staff-notation-button[]
+  [:button
+   {
+    :title "Generates staff notation and MIDI file using Lilypond",
+    :name "generateStaffNotation"
+    :on-click 
+    (fn []
+      (generate-staff-notation-xhr 
+        generate-staff-notation-URL
+       {:src (get-in @app-state [:doremi-text])
+         :kind (get-in @app-state [:composition-kind])
+    }))
+    }
+   "Generate Staff Notation/ MIDI/ Lilypond"
+   ] 
+  )
 (defn doremi-box[]
   [:div.doremiBox
    [:h3
@@ -1012,11 +1102,7 @@
    [:div.controls
     [select-notation-box (get @app-state :kind)]
     [render-as-box (get @app-state :render-as)]
-    [:button
-     {
-      :title "Generates staff notation and MIDI file using Lilypond",
-      :name "generateStaffNotation"}
-     "Generate Staff Notation/ MIDI/ Lilypond"]
+    [generate-staff-notation-button]
     [:button.toggleButton
      "Lilypond"]
     [:a.hidden
@@ -1052,6 +1138,7 @@
    [composition {:parsed (get-in @app-state [:parse-results,:parsed])
                  :render-as (get @app-state :render-as) 
                  } ]
+   [staff-notation]
    ]
   )
 
@@ -1062,4 +1149,34 @@
 (defn init []
   (reagent/render-component [calling-component]
                             (.getElementById js/document "container")))
+(defn parse[]
+  (let [current (get @app-state :doremi-text)
+        last-text-parsed (get @app-state :last-text-parsed)
+        ajax-is-running (get @app-state :ajax-is-running)
+        kind  (get @app-state :composition-kind)
+        ]
+     (cond ajax-is-running
+           nil
+           (= nil current)
+           nil
+           (= "" current)
+           nil
+           (= current last-text-parsed)
+           nil
+           true
+           (let
+           [ ;;_ (log "should parse")
+            parse-results (doremi-text->collapsed-parse-tree 
+                          current kind)
+            ]
+        (swap! app-state assoc-in
+               [:parse-results]
+               parse-results)
+            (swap! app-state assoc-in [:last-text-parsed] current)
+             )
+           )))
 
+(defn start-parse-timer[]
+      (js/setInterval parse 2000))
+
+(start-parse-timer)

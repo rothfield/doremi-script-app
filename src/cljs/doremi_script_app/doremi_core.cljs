@@ -1,5 +1,6 @@
 (ns doremi-script-app.doremi_core
   (:require 
+    [doremi-script-app.utils :refer [log] ]
     [goog.net.XhrIo :as xhr]
     [clojure.zip :as zip]
     [clojure.string :refer
@@ -10,18 +11,6 @@
     [instaparse.viz :as viz]
     ))
 
-
-
-(.log js/console "loading doremi_core") 
-
-(defn my-log[x]
-  (.log js/console x)) 
-
-(defn zlog[x]
-  (.log js/console x)) 
-
-(defn log[ my-arg]
-  (my-log (.stringify js/JSON (clj->js my-arg))))
 
 
 (declare doremi-text->parse-tree
@@ -88,8 +77,7 @@
 
 
 (defn ^:private parse[x kind]
-  (.log js/console "parse: kind is" kind) 
-
+  (log "parse: kind is" kind) 
   (if kind
     (insta/parse @parser x :start kind)
     (insta/parse @parser x)
@@ -1673,7 +1661,7 @@
 
 
 
-(defn ^:private to-lilypond[composition txt]
+(defn to-lilypond[composition txt]
   (when false (println "entering to-lilypond") (pprint composition))
   (let [headers-printed? (atom false)
         started-pitch? (atom false)
