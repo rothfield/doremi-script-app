@@ -1,6 +1,7 @@
 (ns doremi-script-app.doremi_core
+;;  (:require-macros [cljs.core :refer [assert]])
   (:require 
-    [doremi-script-app.utils :refer [log] ]
+    [doremi-script-app.utils :refer [pprint log is-a] ]
     [goog.net.XhrIo :as xhr]
     [clojure.zip :as zip]
     [clojure.string :refer
@@ -30,10 +31,6 @@
   (pst)
   )
 
-(defn pprint[x]
-  (.log js/console x)) 
-
-
 (defonce parser (atom nil))
 
 
@@ -49,28 +46,26 @@
   ;;;   :optimize :memory   (when possible, employ strategy to use less memory)
   ;;;
   ;; http://www.myclojureadventure.com/2012/09/intro-to-clojurescript-part-2-getting.html
-  (.log js/console "loading serialized-grammar from ebnf/grammar.txt") 
+  (log "loading serialized-grammar from ebnf/grammar.txt") 
   (if (nil? @grammar)
     (.send goog.net.XhrIo 
            "ebnf/grammar.txt" ;; serialized
-           ;;"ebnf/doremiscript.ebnf.txt"
            (fn load-grammar-callback[x]
              (let [data (js->clj (.getResponseText (.-target x))
                                  :keywordize-keys true)]
                (reset! grammar (read-string data)) ;; for debugging
-               ;;   (.log js/console "grammar:" "\n" (prn @grammar)) 
                (reset! parser (insta/parser @grammar :start :sargam-composition :total true))
-               (.log js/console "grammar initialized") 
+               (log "grammar initialized") 
                )))
     (log "skipping reloading of grammar/parser") 
     ))
 
 (load-grammar)
 
-;;(.log js/console "grammar:" "\n" (prn @grammar)) 
-(when false
+(defn print-out-grammar[]
+  ;; use this to create ebnf.txt file
   (binding [*print-dup* true] 
-    (.log js/console "using prn-str" 
+    (log "using prn-str" 
           (with-out-str (prn (:grammar @parser)))
           )
     ))
@@ -89,14 +84,14 @@
   ;; Uses insta/parses which produces a lazy seq of results
   ;; assert should throw exception if there is more than one.
   (let [ results (insta/parses @parser x )
-        _ (pprint results)
+        _ (log results)
         result (first results)
         more (second results)
         ]
     (when more
       (println
         (str "amiguous parse: first 5 results are"
-             (->> results (take 5) pprint with-out-str)
+             (->> results (take 5) log)
              )))
     result))
 
@@ -1197,7 +1192,8 @@
   "Insert [ and ] after the duration. Use regex to do replacement"
   (let [last-idx (dec (count str-array))]
     (if (or (= 1 (count str-array))
-            (some  (fn[^java.lang.String x] (.startsWith x "r")) str-array))
+           ;; (some  (fn[^java.lang.String x] (.startsWith x "r")) str-array))
+            (some  #(= "r" (subs % 0 1)) str-array))
       str-array
       ;; else
       (do
@@ -1688,8 +1684,8 @@
 
 (defn ^:private attribute-section->map[x]
   {
-   :pre [(is? :attribute-section x)]
-   :post [ (map? %)]
+ ;;  :pre [(is-a? :attribute-section x)]
+  ;; :post [ (map? %)]
    }
   (apply array-map
          (map-even-items #(-> % lower-case keyword)
@@ -1720,7 +1716,7 @@
           (or (:error %)
               (and (vector? (:parsed %))
                    (is? :composition (:parsed %))
-                   (:lilypond %)
+                ;;   (:lilypond %)
                    (:parsed %)))
           ]
    }
@@ -1738,7 +1734,7 @@
                                z))
                       parsed))
             _ (when false (println "**") (pprint collapsed-parse-tree))
-            lilypond (to-lilypond collapsed-parse-tree txt)
+            lilypond  {:output "lilypond here" } ;;(to-lilypond collapsed-parse-tree txt)
             ]
         {:src txt
          :lilypond (:output lilypond)
@@ -1746,6 +1742,7 @@
          :attributes (:my-map lilypond)
          :error nil}
         ))))
+
 ;; (-> "S-R" doremi-text->parsed)
 (defn doremi-text->parsed
   ([txt kind]
@@ -1904,23 +1901,20 @@
 (defn doremi-text->collapsed-parse-tree[txt kind]
   {
    :pre [(string? txt)]
-   :post [ ;;(do (pprint %) true)
-          (map? %)
-          (:src %)
-          (or (:error %)
-              (and (vector? (:parsed %))
-                   (is? :composition (:parsed %))
-                   (:parsed %)))
+   :post [
+         ;; (map? %)
+         ;; (:src %)
+         ;; (or (:error %)
+          ;;    (and (vector? (:parsed %))
+           ;;        (is? :composition (:parsed %))
+            ;;       (:parsed %)))
           ]
    }
-  (when false
-    (.log js/console "doremi-text->collapsed-parse-tree kind is" kind) 
-    )
+    (log "doremi-text->collapsed-parse-tree kind is" kind) 
+    (log "doremi-text->collapsed-parse-tree txt is" txt) 
   (let [ parsed  (doremi-text->parse-tree txt kind) ]
-    (when false
-      (log "parsed:")
-      (log  parsed))
-
+       (log "parsed:")
+       (log  parsed)
     (if (parse-failed? parsed)  ;; error
       {:src txt
        :parsed nil

@@ -4,9 +4,9 @@
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
-    [doremi-script-app.utils :refer [log] ]
+    [doremi-script-app.utils :refer [log is-a] ]
     [doremi-script-app.doremi_core :as doremi_core
-     :refer [doremi-text->collapsed-parse-tree to-lilypond]]
+     :refer [doremi-text->collapsed-parse-tree]]
     ;;  [goog.string :as gstring]
     [goog.net.XhrIo :as xhr]
     [goog.json :as gjson]
@@ -15,6 +15,9 @@
     [reagent.core :as reagent :refer [atom]]
     [instaparse.core :as insta] 
     ))
+
+
+;;(log "(-> | S-  doremi-text->parsed))" (-> "| S- " doremi-text->parsed))
 
 (defonce app-state
   (atom 
@@ -27,9 +30,6 @@
 (def log-off true)
 (declare draw-item)
 
-(defn is-a[s v]
-  assert(= (name (first v)) (name s)))
-;; assert(and (vector? v) (= (first v) s))
 (defn to-s[x]
   (.stringify js/JSON (clj->js x)))
 
@@ -275,9 +275,9 @@
                     })
 
 (defn deconstruct-pitch-string-by-kind[pitch kind]
-    (log "deconstruct-pitch-string-by-kind" " kind is:" kind) 
-    (log "pitch is")
-    (log pitch)
+  (log "deconstruct-pitch-string-by-kind" " kind is:" kind) 
+  (log "pitch is")
+  (log pitch)
   (case kind
     :sargam-composition
     (get lookup1 pitch)
@@ -311,12 +311,12 @@
 
 
 
-(defn parse-results [{parsed :parsed }]
+(defn parse-results-box [{parsed :parsed }]
   [:div.form-group
    [:label {:for "parse-results"} "Parse Results:"]
    [:textarea#parse-results.form-control 
     {:rows "3" 
-     :spellcheck false
+     :spellCheck false
      :readOnly true
      :value 
      (.stringify js/JSON (clj->js parsed))
@@ -362,22 +362,16 @@
     "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
     :name "src",
     :value doremi-text
-     :spellCheck false
+    :spellCheck false
     :on-change 
     (fn[x] 
       (let [new-val
             (-> x .-target .-value)
-            ;; _ (.log js/console kind) 
-            ;; TODO: make this async
-          ;;  parse-results (doremi-text->collapsed-parse-tree new-val
-           ;;                                                  kind)
             ]
         (swap! app-state assoc-in
                [:doremi-text]
                new-val)
-
         ) 
-       ;; (parse)
       )
     }])
 
@@ -536,8 +530,7 @@
 
 (defn barline[{src :src item :item}]
   (let [barline-name (first (second item))]
-    (.log js/console "barline-name is" barline-name)
-
+    (log "barline-name is" barline-name)
     [:span.note_wrapper
      [:span.note.barline 
       {:dangerouslySetInnerHTML 
@@ -866,10 +859,10 @@
   )
 
 (defn draw-item[item idx]
-    (log "entering draw-item, kind is" 
-          (get @app-state :render-as))
-    (log "entering draw-item, item is")
-    (log item)
+  (log "entering draw-item, kind is" 
+       (get @app-state :render-as))
+  (log "entering draw-item, item is")
+  (log item)
   (let [my-key (keyword (first item))]
     (log "draw-item, item is")
     (log item)
@@ -1088,9 +1081,9 @@
     (fn []
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
-       {:src (get-in @app-state [:doremi-text])
+        {:src (get-in @app-state [:doremi-text])
          :kind (get-in @app-state [:composition-kind])
-    }))
+         }))
     }
    "Generate Staff Notation/ MIDI/ Lilypond"
    ] 
@@ -1128,7 +1121,7 @@
    [:div.entryAreaBox.doremiContent
     [entry-area {:doremi-text (get @app-state :doremi-text)}]
     ]
-   [parse-results {:parsed (get-in @app-state [:parse-results,:parsed])}]
+   [parse-results-box {:parsed (get-in @app-state [:parse-results,:parsed])}]
    [:div.compositionParseFailed.hidden
     [:pre 
      [:div.lilypondDisplay.hidden 
@@ -1155,28 +1148,31 @@
         ajax-is-running (get @app-state :ajax-is-running)
         kind  (get @app-state :composition-kind)
         ]
-     (cond ajax-is-running
-           nil
-           (= nil current)
-           nil
-           (= "" current)
-           nil
-           (= current last-text-parsed)
-           nil
-           true
-           (let
-           [ ;;_ (log "should parse")
-            parse-results (doremi-text->collapsed-parse-tree 
-                          current kind)
-            ]
-        (swap! app-state assoc-in
-               [:parse-results]
-               parse-results)
+    (cond ajax-is-running
+          nil
+          (= nil current)
+          nil
+          (= "" current)
+          nil
+          (= current last-text-parsed)
+          nil
+          :else 
+          (let
+            [ ;;_ (log "should parse")
+             my-parse-results (doremi-text->collapsed-parse-tree 
+                             current kind)
+             ]
+; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
+
+
+            (log "****in parse, parse-results are" my-parse-results)
+            (log "in parse, app-state=" @app-state)
+            (swap! app-state assoc-in [:parse-results] my-parse-results)
             (swap! app-state assoc-in [:last-text-parsed] current)
-             )
-           )))
+            )
+          )))
 
 (defn start-parse-timer[]
-      (js/setInterval parse 2000))
+  (js/setInterval parse 2000))
 
 (start-parse-timer)
