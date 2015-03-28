@@ -1,3 +1,11 @@
+select.selectNotation ,select.renderAs {
+  width: 100px;
+}
+.doremiContent {
+		overflow-x:none; 
+		overflow-y:auto;   
+}
+
 .hidden {
 		display:none;
 }

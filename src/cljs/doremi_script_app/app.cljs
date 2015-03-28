@@ -1019,10 +1019,10 @@
                        "g"]]]]]]
   )
 (defn select-notation-box[kind]
-  [:div.selectNotationBox
-   [:label
+  [:div.form-group ;;selectNotationBox
+   [:label {:for "selectNotation"}
     "Enter Notation as: "]
-   [:select#selectNotation
+   [:select#selectNotation.selectNotation.form-control
     {:value (get @app-state :composition-kind)
      :on-change 
 
@@ -1049,9 +1049,11 @@
      "sargam"]]]
   )
 (defn render-as-box[]
-  [:div.RenderAsBox
+  [:div.form-group ;;selectNotationBox
+  ;;[:div.RenderAsBox
    [:label { :for "renderAs"} "Render as:"]
-   [:select#renderAs {:value (name (get @app-state :render-as))
+   [:select#renderAs.renderAs.form-control
+    {:value (name (get @app-state :render-as))
                       :on-change 
                       #(swap! app-state 
                               assoc
@@ -1073,7 +1075,7 @@
   )
 
 (defn generate-staff-notation-button[]
-  [:button
+  [:button.btn.btn-primary
    {
     :title "Generates staff notation and MIDI file using Lilypond",
     :name "generateStaffNotation"
@@ -1083,26 +1085,36 @@
         generate-staff-notation-URL
         {:src (get-in @app-state [:doremi-text])
          :kind (get-in @app-state [:composition-kind])
-         }))
+         })
+      false)
     }
-   "Generate Staff Notation/ MIDI/ Lilypond"
+   "Generate Staff Notation"
    ] 
   )
-(defn doremi-box[]
-  [:div.doremiBox
+
+(defn header[]
+  ;; currently unused
    [:h3
     "Enter letter music notation using 1234567CDEFGABC DoReMi (using drmfslt or DRMFSLT) SRGmPDN or devanagri: सर ग़म म'प धऩ\n\n"]
-   [:div.controls
-    [select-notation-box (get @app-state :kind)]
-    [render-as-box (get @app-state :render-as)]
-    [generate-staff-notation-button]
+  )
+
+(defn toggle-lilypond-button[]
+  ;; currently unused
     [:button.toggleButton
      "Lilypond"]
+  )
+(defn play-midi-file[]
+  ;; currently unused
     [:a.hidden
      "Play MIDI File(Turn Volume Up!)"]
-
+  )
+(defn toggle-staff-notation-button[]
+  ;; currently unused
     [:button.toggleButton
      "Staff Notation Hide/Show"]
+  )
+(defn other-unused[]
+  [:div
     [:a
      {
       :href
@@ -1117,21 +1129,37 @@
       :target "_blank",
       :title "Opens in new window"
       }
-     "Help"]]
-   [:div.entryAreaBox.doremiContent
-    [entry-area {:doremi-text (get @app-state :doremi-text)}]
-    ]
-   [parse-results-box {:parsed (get-in @app-state [:parse-results,:parsed])}]
+     "Help"]
+])
+
+(defn controls[]
+  [:form.form-inline
+    [select-notation-box (get @app-state :kind)]
+    [render-as-box (get @app-state :render-as)]
+    [generate-staff-notation-button]
+   ]
+  )
+(defn parse-failed[]
+  ;;; unused
    [:div.compositionParseFailed.hidden
     [:pre 
      [:div.lilypondDisplay.hidden 
       [:img#staff_notation
        :name "",
        :src "/images/blank.png?1426699590838"]]]]
+  )
+
+(defn doremi-box[]
+  [:div.doremiBox
+   [controls]
+   [:div.entryAreaBox.doremiContent
+    [entry-area {:doremi-text (get @app-state :doremi-text)}]
+    ]
    [composition {:parsed (get-in @app-state [:parse-results,:parsed])
                  :render-as (get @app-state :render-as) 
                  } ]
    [staff-notation]
+   [parse-results-box {:parsed (get-in @app-state [:parse-results,:parsed])}]
    ]
   )
 
