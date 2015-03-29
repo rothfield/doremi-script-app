@@ -1,6 +1,6 @@
 {"version":3,
  "file":
- "/home/john/.boot/cache/tmp/home/john/doremi-script-app/bcc/-fmbdw2/out/adzerk/boot_reload/client.js",
+ "/home/john/.boot/cache/tmp/home/john/doremi-script-app/e2h/-fmbdw2/out/adzerk/boot_reload/client.js",
  "sources":["client.cljs"],
  "lineCount":72,
  "mappings":
@@ -9,7 +9,7 @@
  ["adzerk.boot-reload.client/ws-conn", "cljs.core/atom",
   "adzerk.boot-reload.client/alive?", "cljs.core/deref",
   "adzerk.boot-reload.client/patch-goog-base!", "js/goog", "file",
-  "goog.net.jsloader/load", "p__6930", "vec__6932", "cljs.core/nth",
+  "goog.net.jsloader/load", "p__6927", "vec__6929", "cljs.core/nth",
   "adzerk.boot-reload.client/connect", "url", "opts", "conn",
   "adzerk.boot-reload.websocket/websocket-connection",
   "cljs.core/reset!", "clojure.browser.event/listen", "evt",
