@@ -1,0 +1,27 @@
+CACHE MANIFEST
+
+#version 1.0 3-28-2015
+
+CACHE:
+
+#images
+
+
+#internal HTML documents
+
+
+#style sheets
+css/application.css
+css/bootstrap.min.css
+css/doremi.css
+
+#style sheet images
+data:image/gif;base64,R0lGODlhCQAHAID/AAAAAMDAwCH5BAEAAAEALAAAAAAJAAcAQAINjI8Bu8idomHpgQpDAQA7
+
+#javascript files
+js/jquery.min.js
+js/dom_fixer.js
+js/app.js
+
+NETWORK:
+*
