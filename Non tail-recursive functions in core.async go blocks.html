@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Non tail-recursive functions in core.async go blocks</title>
+    <meta name="description" content="">
+    <meta name="author" content="Martin Trojer">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="/assets/themes/bootstrap/resources/material/css/material.min.css" rel="stylesheet">
+    <link href="/assets/themes/bootstrap/resources/material/css/material-wfont.min.css" rel="stylesheet">
+    <link href="/assets/themes/bootstrap/resources/bootstrap/css/bootstrap-paper.min.css" rel="stylesheet">
+    <link href="/assets/themes/bootstrap/resources/material/css/ripples.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/assets/themes/bootstrap/resources/bootstrap/css/bootstrap-social.min.css" rel="stylesheet">
+    <link href="/assets/themes/bootstrap/css/syntax-monokai-light.css" rel="stylesheet">
+    <link href="/assets/themes/bootstrap/css/style.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="/assets/themes/bootstrap/resources/respond/Respond.min.js"></script>
+    <![endif]-->
+
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+	  <a class="navbar-brand" href="/"><i class="fa fa-home"></i> Martin's Blog</a>
+        </div>
+
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+            
+
+
+  
+    
+      
+      	
+      	<li><a href="/about.html">About</a></li>
+      	
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      
+<div class="page-header">
+  <h1>Non tail-recursive functions in core.async go blocks </h1>
+</div>
+
+<div class="row post-full">
+  <div class="col-md-12">
+    <div class="date">
+      <span>17 July 2013</span>
+    </div>
+    <div class="content">
+      <p>I&#39;ve been using various <a href="http://go-lang.org/">Go</a> examples / tutorials to take a deeper look into <a href="https://github.com/clojure/core.async">core.async</a>. The <a href="http://en.wikipedia.org/wiki/Communicating_sequential_processes">CSP</a> pattern is a very interesting and powerful, it&#39;s good move for Clojure to &quot;throw in&quot; with Go and push this style of programming.</p>
+
+<p>core.sync works at s-expression level, where some other JVM solutions (<a href="http://www.malhar.net/sriram/kilim/">Kilim</a>, <a href="https://github.com/puniverse/pulsar">Pulsar</a>) do the same on byte code level. The main benefit of doing these transforms on s-expression level is that they are applicable to ClojureScript, where CSP can be a very neat way out of callback hell. <a href="http://swannodette.github.io/2013/07/12/communicating-sequential-processes/">David has written about this</a>.</p>
+
+<h3>The go macro</h3>
+
+<p>Now, one limitation of the go macro is that it can&#39;t &quot;look into&quot; other functions / closures. This difference stands out quite clearly when reading Go code where you can put &quot;go&quot; in-front of function calls.
+<script src="https://gist.github.com/martintrojer/6019215.js?file=put-defn.clj"> </script>
+This causes the <code>Assert failed: &gt;! used not in (go ...) block</code> error. In this case it&#39;s easily fixed, simply move the <code>(go ...)</code> embrace into the <code>put-all!</code> function or inline the body of the function.</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=put-inline.clj"> </script>
+
+<p>Please note that inlining an anonymous function does not work (fails with the error as above)</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=put-fn.clj"> </script>
+
+<p>However, if the function you&#39;re inlining is tail recursive, you can use the approach above by using the <code>loop/recur</code> form (which the go macro can translate).</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=put-loop.clj"> </script>
+
+<p>I.e. it&#39;s possible to simulate putting go around a function call by inlining it&#39;s body -- if it&#39;s tail recursive (or not recursive at all).</p>
+
+<h3>Non-tail recursive functions</h3>
+
+<p>Now for a more <a href="http://tour.golang.org/#68">involved example</a>, we want to walk a binary search tree and put the values on a channel. When all results have been put on the channel we want to close it.</p>
+
+<p>Here&#39;s a simple version of the walker (using the thread blocking <code>&gt;!!</code> call).
+<script src="https://gist.github.com/martintrojer/6019215.js?file=non-go-walker.clj"> </script></p>
+
+<p>Then we can use the <code>same</code> function to see if 2 trees are identical;
+<script src="https://gist.github.com/martintrojer/6019215.js?file=thread-same.clj"> </script></p>
+
+<p>How do we convert this to use go blocks? We ideally want to have the entire <code>walker</code> function done by one go process, so that we can close the channel when the that function returns. Embracing the body of that function with <code>(go ..)</code> gives us the problem that the channel immediately closes before we get a chance to put anything on it.</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=bad-go-walker.clj"> </script>
+
+<p>Also, we&#39;ll get a new go process for every node in the tree (every recursive call), so not all processing is done in &quot;one place&quot;.</p>
+
+<p>Ok, let&#39;s try to inline the body of the walker function so we can call <code>close!</code> when it&#39;s done.</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=inlined-walker.clj"> </script>
+
+<p>Hm, this won&#39;t work because of the restriction of the go macro described above. If the walker function would have been <strong>tail recursive</strong>, we could have used the <code>loop/recur</code> form where the <code>((fn ..))</code> is and this approach would work, but not in this case.</p>
+
+<p>Let&#39;s give up the idea of using one go process per tree and see if we can&#39;t use some kind of synchronisation to not call <code>close!</code> too early.</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=better-go-walker.clj"> </script>
+
+<p>Here we put the <code>walker</code> and <code>close!</code> calls in another go block and then we wait for the call to walker to &quot;finish&quot; before moving on to close the channel. What it means for the &quot;walker to finish&quot; is that the go block for the top node of the tree terminates (since every node in the tree will have it&#39;s own go block).</p>
+
+<p>This looks promising, but the results in the channel can be in any order (since there are no order guarantees in the scheduling of go processes) -- this also means that some of the values might be missing since the &quot;top&quot; go process can be scheduled before a child one.</p>
+
+<p>We need a little bit more synchronisation to arrive at a working solution.</p>
+
+<script src="https://gist.github.com/martintrojer/6019215.js?file=go-walker.clj"> </script>
+
+<p>Now all the nodes will be processed (by different go processes) but in the correct order.</p>
+
+<p>The complete solution can be found <a href="https://github.com/martintrojer/go-tutorials-core-async/blob/master/src/tut005.clj">here</a>, note that the <code>(thread ...)</code> embrace in the <code>same</code> function has been removed.</p>
+
+<h3>Postscript</h3>
+
+<p><a href="https://github.com/martintrojer/go-tutorials-core-async/">Some more Go tutorials converted to core.async</a></p>
+
+<p>A final word of advice, when converting Go examples to core.async remember no to do <code>Thread/sleep</code> in your go blocks! In go, the sleep function is integrated in the go routine scheduling, this is not the case in core.async. See <a href="http://martintrojer.github.io/clojure/2013/07/07/coreasync-and-blocking-io/">here</a> for a deeper explanation why.</p>
+
+    </div>
+
+    
+    <br>
+    <h4>Categories</h4>
+      <ul class="nav nav-pills">
+	      <!-- <li><i class="icon-folder-open"></i></li> -->
+        
+        
+
+
+  
+     
+    	<li><a href="/categories.html#clojure-ref">
+    		clojure <span class="badge">38</span>
+    	</a></li>
+    
+  
+
+
+
+      </ul>
+    
+
+    
+    <h4>Tags</h4>
+      <ul class="nav nav-pills">
+	      <!-- <li><i class="icon-tags"></i></li> -->
+        
+        
+
+
+  
+     
+    	<li><a href="/tags.html#clojure-ref">clojure <span class="badge">41</span></a></li>
+     
+    	<li><a href="/tags.html#core.async-ref">core.async <span class="badge">5</span></a></li>
+     
+    	<li><a href="/tags.html#go-ref">go <span class="badge">3</span></a></li>
+    
+  
+
+
+
+      </ul>
+    
+
+    <div>
+  <h4>Share this post</h4>
+  <a class="btn btn-link btn-social-icon btn-twitter" href="https://twitter.com/intent/tweet?text=Non+tail-recursive+functions+in+core.async+go+blocks&url=http://martintrojer.github.io/clojure/2013/07/17/non-tailrecursive-functions-in-coreasync&via=martintrojer&related=martintrojer" rel="nofollow" target="_blank" title="Share on Twitter"><i class="fa fa-twitter"></i></a>
+  <a class="btn btn-link btn-social-icon btn-facebook" href="https://facebook.com/sharer.php?u=http://martintrojer.github.io/clojure/2013/07/17/non-tailrecursive-functions-in-coreasync" rel="nofollow" target="_blank" title="Share on Facebook"><i class="fa fa-facebook"></i></a>
+  <a class="btn btn-link btn-social-icon btn-google-plus" href="https://plus.google.com/share?url=http://martintrojer.github.io/clojure/2013/07/17/non-tailrecursive-functions-in-coreasync" rel="nofollow" target="_blank" title="Share on Google+"><i class="fa fa-google-plus"></i></a>
+  <a class="btn btn-link btn-social-icon btn-linkedin" href="http://www.linkedin.com/shareArticle?mini=true&url=/clojure/2013/07/17/non-tailrecursive-functions-in-coreasync&title=Non+tail-recursive+functions+in+core.async+go+blocks" rel="nofollow" target="_blank" title="Share on LinkedIn"><i class="fa fa-linkedin"></i></a>
+</div>
+
+
+    <ul class="pagination">
+      
+        <li class="prev"><a href="/clojure/2013/07/07/coreasync-and-blocking-io" title="core.async and Blocking IO">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/clojure/2013/09/07/retrofitting-the-reloaded-pattern-into-clojure-projects" title="Retrofitting the Reloaded pattern into Clojure projects">Next &rarr;</a></li>
+      
+    </ul>
+    <hr>
+
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_shortname = 'martinsprogrammingblog'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      <hr>
+      <footer>
+        <div class="contact">
+	        <p align="center">
+	          <i class="fa fa-twitter"></i>
+            <a href="http://twitter.com/martintrojer/">twitter.com/martintrojer</a>
+	          |
+	          <i class="fa fa-github"></i>
+            <a href="http://github.com/martintrojer/">github.com/martintrojer</a>
+	          |
+	          <a href="http://martintrojer.github.com/atom.xml">Atom Feed</a>
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-39168964-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+    <script src="/assets/themes/bootstrap/resources/jquery/jquery-2.1.1.min.js"></script>
+    <script src="/assets/themes/bootstrap/resources/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/assets/themes/bootstrap/resources/material/js/ripples.min.js"></script>
+    <script src="/assets/themes/bootstrap/resources/material/js/material.min.js"></script>
+  </body>
+</html>
+

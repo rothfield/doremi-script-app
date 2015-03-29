@@ -2,4 +2,8 @@
 goog.provide('boot.cljs.app');
 goog.require('cljs.core');
 goog.require('doremi_script_app.app');
-doremi_script_app.app.init();
+goog.require('adzerk.boot_reload');
+goog.require('adzerk.boot_cljs_repl');
+doremi_script_app.app.init.call(null);
+
+//# sourceMappingURL=app.js.map

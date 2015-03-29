@@ -1,0 +1,288 @@
+<html>
+  <head>
+    <title>My quest for drastically simpler browser UIs - falkoriemenschneider.de</title>
+    <link href="software-engineers-logo.ico" type="image/x-icon" rel="shortcut icon" />
+    <link href="styles.css" type="text/css" rel="stylesheet" />
+    <link href="pygments.css" type="text/css" rel="stylesheet" />
+    <link href="fontello.css" type="text/css" rel="stylesheet" />
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <div id="navigation">
+      <div id="menu">
+	<ul>
+	  <li><a href="index.html">Recent Articles</a></li>
+	  <li><a href="by-topic.html">By Topic</a></li>
+	  <li><a href="by-year.html">By Year</a></li>
+	  <li><a href="about.html">About me</a></li>
+	  <li style="position:relative;float:right;">
+	    <a target="_blank" href="https://twitter.com/intent/follow?user_id=1539087222">
+	      <i class="icon-twitter" style="color:#55ACEE;font-size:150%;"></i>
+	    </a>
+	  </li>
+	</ul>
+      </div>
+    </div>
+    <div style="margin: 10px;"></div>
+    <div id="page">
+      <div id="content">
+	    <a name="141204"></a>
+	    <a name="a__2014-12-03__Drastically-simpler-browser-UI.html"></a><h1>My quest for drastically simpler browser UIs</h1>03.12.2014 <a href="a__2014-12-03__Drastically-simpler-browser-UI.html">Permalink</a><p></p>
+	    <p>A web application built with significant amounts of JavaScript
+		code running inside the browser is a viable UI technology choice. Even in a
+		conservative environment, teams can today legitimately decide to
+		ignore traditional Java web UI frameworks like JSF, Spring MVC,
+		Wicket, Tapestry etc. in favor of purely JS based libraries like
+		AngularJS, Ember or React which usually results in single-page
+		applications (SPA)<sup><a href="#141204-fn1">1</a></sup>.</p>
+
+	    <p class="tldr">TL;DR My <a href="https://github.com/friemen/zackzack">ClojureScript prototype</a> 
+		starts to show how nice UI code in the browser can
+		look like: declarative, no callbacks, and an emphasis
+		on purity.</p>
+
+	    <h3>The race</h3>
+	    <p>As I see it, teams coming from Java that turn to JavaScript
+		for a large part of the application will face the following
+		challenges:</p>
+
+	    <p>JS looks similar to Java, but it is actually different in many
+		ways. Teams working with e.g. Java in the backend and JS in the
+		frontend need to have both skills available, which is why a backend JS
+		engine like Google V8 with <a href="http://nodejs.org/">Node.js</a> 
+		looks like an interesting option<sup><a href="#141204-fn2">2</a></sup> to
+		reduce the technology stack.</p>
+
+	    <p>JS as programming language is full of sharp edges and little
+		flaws. <a href="https://leanpub.com/understandinges6/read">ES6</a>,
+		once approved and widely available, will be an
+		improvement, but it's far too early to state that JS
+		will become a top-notch language for "programming in
+		the large".</p>
+
+	    <p>JS had until very recently<sup><a href="#141204-fn3">3</a></sup> 
+		no static type checker.  Developers used to static
+		type checking will have to change their habits to not
+		shoot in their own foot. I don't think that a static
+		type checker is a must to write well-crafted software,
+		however it's a very useful tool to have in your belt
+		when things get complex.</p>
+
+	    <p>Let's face it: despite its problems, JS is the dominating web
+		programming language and is here to stay. So it's quite understandable
+		that many programming language communities are in the race to make
+		their technology appealing to web UI developers. There are for example
+		CoffeeScript, Dart, Elm, GWT, PureScript, Scala.js, TypeScript and god
+		knows what, and yes: there is ClojureScript. All technologies have in
+		common that they treat JavaScript as compilation target.</p>
+
+
+	    <h3>ClojureScripts architectural advantage</h3>
+	    <p>One particular challenge when building UIs is not
+		JavaScripts fault, but a problem almost all languages
+		without an explicit support for asynchronity share:
+		<a href="http://callbackhell.com/">callbacks in callbacks in callbacks</a>,
+		coordinated by shared mutable state. Many developers
+		seldom face this problem in its entirety because we
+		can often afford to avoid asynchronity outside of rich
+		clients. But the browser <i>is</i> essentially a rich client
+		programming environment with event handlers, a visual
+		component tree a.k.a DOM and a single event-loop which
+		must not be blocked. You want to react upon user
+		input? Use a callback! You need a response from a
+		remote call?  Use a callback! You need to do some
+		background calculation? Use a web worker and pass a
+		callback!  The problem here is that your logic is
+		fragmented into several pieces, each wrapped by a
+		callback. This makes understanding presentation logic
+		harder. One callback is no issue, many will likely
+		become a burden.</p>
+
+	    <p>With <a href="https://github.com/clojure/core.async">core.async</a> 
+		Clojure offers a practical implementation<sup><a href="#141204-fn4">4</a></sup> of an approach called 
+		<a href="http://en.wikipedia.org/wiki/Communicating_sequential_processes">Communicating Sequential Processes</a>
+		which can also be used in 
+		<a href="http://swannodette.github.io/2013/07/12/communicating-sequential-processes/">ClojureScript</a>.  
+		There's a <a href="http://www.lispcast.com/core-async-browser-motivation">very nice introduction</a> 
+		of core.async in the browser by Eric Normand. It
+		allows you to eliminate callbacks almost completely, creating the
+		illusion of a compact, sequentially executed process with local
+		state. Combined with <a href="https://github.com/swannodette/om">Om</a>, 
+		a wrapper for Facebooks <a href="http://facebook.github.io/react/">React</a> library,
+		ClojureScript promises to enable a drastically simpler way to encode
+		UI functionality.</p>
+
+	    <p>In the last few weeks I have built an architectural UI prototype,
+		addressing some of the most recurring problems in enterprisey
+		forms-over-data UIs like databinding, input validation or remote
+		communication. My goal was to see how much work is actually needed to
+		make "drastically simpler" happen in this scenario.</p>
+
+	    <p>This work is on-going and can be <a href="https://github.com/friemen/zackzack">followed on GitHub</a>,
+		I keep a <a href="http://www.falkoriemenschneider.de/zackzack/">demo running on my website</a>.
+		I'd like to point out three interesting results so far:</p>
+
+
+	    <h3>Concise specification</h3>
+	    <p>You can concisely specify the static looks of the UI,
+		for example like so:</p>
+	    <div class="syntax"><pre>
+(<span class="nf">panel</span> <span class="s">"fields"</span> <span class="nv">:layout</span> <span class="nv">:two-columns</span>
+                <span class="nv">:elements</span> <span class="p">[(</span><span class="nf">checkbox</span> <span class="s">"private"</span><span class="p">)</span>
+                           <span class="p">(</span><span class="nf">textfield</span> <span class="s">"name"</span> <span class="nv">:label</span> <span class="s">"Full name"</span><span class="p">)</span>
+                           <span class="p">(</span><span class="nf">textfield</span> <span class="s">"company"</span><span class="p">)</span>
+                           <span class="p">(</span><span class="nf">textfield</span> <span class="s">"street"</span><span class="p">)</span>
+                           <span class="p">(</span><span class="nf">selectbox</span> <span class="s">"city"</span><span class="p">)</span>
+                           <span class="p">(</span><span class="nf">datepicker</span> <span class="s">"birthday"</span><span class="p">)])</span>	    
+</pre></div>
+            
+	    <p>What you can see above are merely some nested function calls that
+		eventually produce a data structure that is passed down to Om
+		components. If you're able to assemble your UI out of simple
+		components like those then such an approach is applicable and yields a
+		textual specification of the UI.</p>
+
+
+	    <h3>No callbacks</h3>
+	    <p>You can get away without callbacks. Please take a look at
+		the following piece of code which implements the reload action.</p>
+	    <div class="syntax"><pre>
+<span class="p">(</span><span class="k">defn </span><span class="nv">&lt;addressbook-reload</span>
+  <span class="p">[</span><span class="nv">state</span> <span class="nv">event</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">go</span> <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">= </span><span class="nv">:ok</span> <span class="p">(</span><span class="nf">&lt;!</span> <span class="p">(</span><span class="nf">&lt;ask</span> <span class="s">"You will loose all your local changes. Are you sure?"</span><span class="p">)))</span>
+        <span class="p">(</span><span class="k">let </span><span class="p">[{</span><span class="nv">s</span> <span class="nv">:status</span> <span class="nv">addresses</span> <span class="nv">:body</span><span class="p">}</span> <span class="p">(</span><span class="nf">&lt;!</span> <span class="p">(</span><span class="nf">http/get</span> <span class="s">"/addresses"</span><span class="p">))]</span>
+          <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nb">= </span><span class="mi">200</span> <span class="nv">s</span><span class="p">)</span>
+            <span class="p">(</span><span class="nf">assoc-in</span> <span class="nv">state</span> <span class="p">[</span><span class="nv">:addresses</span> <span class="nv">:items</span><span class="p">]</span> <span class="nv">addresses</span><span class="p">)</span>
+            <span class="p">(</span><span class="nf">Message</span><span class="o">.</span> <span class="s">"Error loading addresses"</span><span class="p">)))</span>
+        <span class="nv">state</span><span class="p">)))</span>
+	    </pre></div>
+	    <p>Its intention is:</p> 
+
+	    <p><i>First, the user is asked for confirmation. If ok, a GET
+		request is issued and, in case of success, the result is merged into
+		the UI state.</i></p>
+
+	    <p>You can test it in the Addressbook part of the running
+		<a href="http://www.falkoriemenschneider.de/zackzack/">demo</a>.
+		For those unfamiliar with core.async I'll try to explain
+		what's going on here:</p>
+	    
+	    <p>The body of <code>&lt;addressbook-reload</code><sup><a href="#141204-fn5">5</a></sup> is
+		wrapped in a go-block, which makes it a lightweight
+		process that may pause when it accesses a channel. The
+		immediate result of a go block is always an ad-hoc
+		channel, that will eventually transmit the result of
+		the body evaluation. The <code>&lt;!</code> operation is a blocking read. 
+		A process reading from a channel is parked as long as there is no value available.</p>
+
+	    <p>So the body inside <code>&lt;addressbook-reload</code> 
+		first calls <code>&lt;ask</code> which starts its own
+		process and immediately returns a channel that will
+		transmit the users response. The <code>&lt;ask</code> process
+		changes application state to show the question to the
+		user. Then it reads from a channel that an event
+		handler will put the users response on. Now, both
+		processes are parked at <code>&lt;!</code>: 
+		<code>&lt;ask</code> is waiting for the user,
+		<code>&lt;addressbook-reload</code> is waiting for 
+		<code>&lt;ask</code>.
+		Once the response is available it is compared to the value <code>:ok</code>.
+		If the user has confirmed to reload addresses from the
+		backend the process issues a HTTP GET request, which
+		again starts its own process, and does a blocking read
+		with <code>&lt;!</code>, and again the process 
+		<code>&lt;addressbook-reload</code> is parked until a value is
+		available. Finally, if the returned status is 200, the response
+		contains addresses which are merged into the application state.</p>
+
+	    <p>While all this might sound complicated at first, it
+		allows us to write code that is as close to our
+		intention as it can get.  We just call ordinary
+		functions and maintain full control of the flow of
+		logic in one place.</p>
+
+
+	    <h3>Pure functions</h3>
+	    <p>If you scan the 
+		<a href="https://github.com/friemen/zackzack#example">example code</a>
+		you can see that much of the behavior is expressed with <i>pure</i>
+		functions. Functions without side-effects and any
+		dependence on a global context are the simplest
+		building blocks that we can have in an application, so
+		we prefer to build as much as possible in this
+		way. Presuming each piece of UI renders and maintains
+		a piece of state, you can express presentation logic
+		by event-wise application of pure functions of the
+		form <code>[state event -&gt; state]</code>. The pair Om+React is then
+		the perfect tool to transform the updated state to a
+		sequence of efficient DOM changes which we don't have
+		to care about.</p>
+
+	    <p>Despite the general preference for purity there are currently
+		two exceptions to this:</p>
+	    <ul><li>When two components need to interact, the functions
+		involved cause side-effects by explicitly putting values into
+		each others channel.</li>
+		<li>Some functions start a lightweight process via go and
+		    return a channel, because they rely themselves on
+		    channel-returning functions. While it is debatable if using
+		    go makes them impure, testing them may require us to use
+		    <code>with-redefs</code> in order to temporarily
+		    replace the functions that return channels.</li>
+	    </ul>
+
+	    <p>Anyway, most of the logic like validation constraints, most
+		actions, rules and the specification of the view can be
+		expressed with pure functions that make automated testing of
+		presentation logic a breeze.</p>
+
+
+	    <h3>Conclusion</h3>
+	    <p>It's clear that the style of UI programming as shown in
+		this prototype is rigid, so I expect that a project
+		team has to do its own exercise to come to
+		abstractions that suit its needs. However, I'm
+		confident that it is in general possible to reach such
+		level of clarity for any type of frontend. I spent
+		only about 10 working days on it, and with respect to
+		what I wanted to reach I'm quite satisfied with the
+		combination of ClojureScript, core.async and Om in the
+		browser. ClojureScript has become a very appealing
+		option that fulfills my hope for "drastically simpler"
+		UIs.</p>
+
+
+	    <hr width="30%" align="left" />
+	    <sup id="141204-fn1">1. I'm aware of the <a href="http://roca-style.org/">ROCA style</a> as an
+		alternative to SPAs, but unfortunately I did not find much practical
+		advice in the blogosphere about it, except on an 
+		<a href="https://github.com/innoq">InnoQ GitHub account</a>. 
+		Since the ideas sound interesting, hopefully
+		<a href="https://www.innoq.com/blog/st/2014/11/web-based-frontend-integration/">someone can explain in better detail</a> 
+		how it's done right.</sup>
+	    <p></p>
+	    <sup id="141204-fn2">2. Node.js is not without its <a href="https://medium.com/code-adventures/farewell-node-js-4ba9e7f3e52b">own
+		problems</a>.</sup> 
+	    <p></p>
+	    <sup id="141204-fn3">3. Facebook recently open-sourced <a href="http://flowtype.org/">Flow</a> as a possible cure.</sup>
+	    <p></p>
+	    <sup id="141204-fn4">4. <a href="http://golang.org/">Go</a>, the language, offers CSP too.</sup>
+	    <p></p>
+	    <sup id="141204-fn5">5. The '&lt;' prefix in "&lt;addressbook-reload" or "&lt;ask" is a useful 
+		convention <a href="http://www.lispcast.com/core-async-code-style">proposed by Eric Normand</a>.
+		It denotes that a function returns a channel, not a value.</sup>
+	    <p></p>
+	<div class="share-bar"><a target="_blank" href="https://www.xing.com/social_plugins/share?url=http://www.falkoriemenschneider.de/a__2014-12-03__Drastically-simpler-browser-UI.html"><i class="xing-button icon-xing"></i></a><a target="_blank" href="https://plus.google.com/share?url=http://www.falkoriemenschneider.de/a__2014-12-03__Drastically-simpler-browser-UI.html"><i class="gplus-button icon-gplus"></i></a><a target="_blank" href="http://www.linkedin.com/shareArticle?mini=true&amp;url=http://www.falkoriemenschneider.de/a__2014-12-03__Drastically-simpler-browser-UI.html&amp;title=My%20quest%20for%20drastically%20simpler%20browser%20UIs"><i class="linkedin-button icon-linkedin"></i></a><a target="_blank" href="http://twitter.com/intent/tweet?text=My%20quest%20for%20drastically%20simpler%20browser%20UIs%20-%20http://www.falkoriemenschneider.de/a__2014-12-03__Drastically-simpler-browser-UI.html"><i class="twitter-button icon-twitter"></i></a><a target="_blank" href="https://www.facebook.com/sharer.php?u=http://www.falkoriemenschneider.de/a__2014-12-03__Drastically-simpler-browser-UI.html"><i class="facebook-button icon-facebook"></i></a></div></div>
+      <!--div id="splash">See me live:<br />"Clojure at Work" - - 25.4.2013, itemis Bonn</div-->
+    </div>
+    <div style="margin: 10px;"></div>
+    <div id="footer">
+      Impressum:
+      Für den Inhalt dieser Seiten ist Falko Riemenschneider, Schumanstraße 35, 53113 Bonn verantwortlich.
+      <p></p>
+      Haftungshinweis:
+      Mein Webangebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte ich keinen Einfluss habe. Deshalb kann ich für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werde ich derartige Links umgehend entfernen.
+    </div>
+  </body>
+
+</html>
