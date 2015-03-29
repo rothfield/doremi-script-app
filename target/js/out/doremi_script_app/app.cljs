@@ -21,6 +21,8 @@
 ;;
 ;;(log "(-> | S-  doremi-text->parsed))" (-> "| S- " doremi-text->parsed))
 
+(defonce last-text-value (atom ""))
+
 (defonce app-state
   (atom 
     {:composition-kind :sargam-composition
@@ -342,12 +344,36 @@
 ;;;;         .val(), false, this.state.data.kind);
 ;;;;     },
 
+(def text-area-placeholder
+    "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
+)
+
+(defn entry-area []
+  ;; see https://github.com/jonase/reagent-tutorial
+  (let [
+        _ (.log js/console "initing entry-area,last-text-value=" @last-text-value)
+        last-val @last-text-value
+        my-val (reagent/atom last-val)
+                 ]
+    (fn []
+  [:div.form-group
+   [:label {:for "entryArea"} "Enter Letter Notation:"]
+  [:textarea#the_area.entryArea.form-control
+   {
+    :placeholder text-area-placeholder
+    :name "src",
+    :value @my-val
+    :spellCheck false
+    :on-change (fn[x]
+                 (reset! my-val (-> x .-target .-value))
+                 (reset! last-text-value @my-val)
+                 )
+    }]])))
 
 
 
 
-
-(defn entry-area [{doremi-text :doremi-text }]
+(defn zentry-area [{doremi-text :doremi-text }]
   [:div.form-group
    [:label {:for "entryArea"} "Enter Letter Notation:"]
   [:textarea#the_area.entryArea.form-control
@@ -1078,7 +1104,7 @@
        (.preventDefault e)
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
-        {:src (get-in @app-state [:doremi-text])
+        {:src @last-text-value
          :kind (get-in @app-state [:composition-kind])
          })
       )
