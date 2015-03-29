@@ -33,10 +33,9 @@ textarea.entryArea {
 		font-family: monospace; 
 		padding-left: 1em;
 		font-size: 1.6em;
-		height: 6em; 
+		height: 300px; 
 		width:100%; 
 	  overflow-x: scroll;
-		height: 40%; ;;px;
 		position:relative;
 		left:1em;
 		border:none;  /* 0px solid white; */
