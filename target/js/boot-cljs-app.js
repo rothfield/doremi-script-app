@@ -27,7 +27,7 @@ goog.addDependency("../instaparse/core.js", ['instaparse.core'], ['instaparse.co
 goog.addDependency("../clojure/zip.js", ['clojure.zip'], ['cljs.core']);
 goog.addDependency("../clojure/walk.js", ['clojure.walk'], ['cljs.core']);
 goog.addDependency("../doremi_script_app/doremi_core.js", ['doremi_script_app.doremi_core'], ['clojure.zip', 'goog.net.XhrIo', 'doremi_script_app.utils', 'cljs.core', 'instaparse.core', 'instaparse.viz', 'clojure.string', 'cljs.reader', 'clojure.walk']);
-goog.addDependency("../doremi_script_app/app.js", ['doremi_script_app.app'], ['goog.net.XhrIo', 'doremi_script_app.utils', 'goog.json', 'reagent.core', 'goog.Uri', 'cljs.core', 'instaparse.core', 'doremi_script_app.doremi_core', 'clojure.string']);
+goog.addDependency("../doremi_script_app/app.js", ['doremi_script_app.app'], ['goog.dom', 'goog.net.XhrIo', 'doremi_script_app.utils', 'goog.json', 'reagent.core', 'goog.Uri', 'cljs.core', 'instaparse.core', 'doremi_script_app.doremi_core', 'clojure.string']);
 goog.addDependency("../adzerk/boot_reload/reload.js", ['adzerk.boot_reload.reload'], ['goog.net.jsloader', 'goog.Uri', 'cljs.core', 'goog.async.DeferredList', 'clojure.string']);
 goog.addDependency("../clojure/browser/event.js", ['clojure.browser.event'], ['cljs.core', 'goog.events.EventTarget', 'goog.events.EventType', 'goog.events']);
 goog.addDependency("../clojure/browser/net.js", ['clojure.browser.net'], ['goog.net.xpc.CfgFields', 'goog.net.XhrIo', 'goog.json', 'goog.Uri', 'cljs.core', 'goog.net.EventType', 'goog.net.xpc.CrossPageChannel', 'clojure.browser.event']);

@@ -4,10 +4,11 @@
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
-    [doremi-script-app.utils :refer [by-id log is-a] ]
+    [doremi-script-app.utils :refer [my-log2 my-log by-id log is-a] ]
     [doremi-script-app.doremi_core :as doremi_core
      :refer [doremi-text->collapsed-parse-tree]]
     ;;  [goog.string :as gstring]
+    [goog.dom :as dom]
     [goog.Uri :as guri] 
     [goog.net.XhrIo :as xhr]
     [goog.json :as gjson]
@@ -426,8 +427,8 @@
 
 
 (defn notes-line [{item :item}]
-  (log "notes-line, item is")
-  (log item)
+  (.log js/console "notes-line, item is")
+  (my-log2 item)
   (assert (is-a "notes-line" item))
   [:div.stave.sargam_line
    (draw-children (rest item))])
@@ -435,33 +436,60 @@
 ;;; componentDidMount: function () { window.dom_fixes($(this.getDOMNode())); },
 ;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
 ;; var items = rest(item);
+;;
+(defn parse[]
+  (let [;; current (get @app-state :doremi-text)
+        elem (by-id "the_area")
+        current (.-value elem)
+        last-text-parsed (get @app-state :last-text-parsed)
+        ajax-is-running (get @app-state :ajax-is-running)
+        kind  (get @app-state :composition-kind)
+        ]
+       ;;(.log js/console "current="  current)
+    (cond 
+          (= nil current)
+          nil
+          (= "" current)
+          nil
+          (= current last-text-parsed)
+          nil
+          :else 
+          (let
+            [ ;;_ (log "should parse")
+             my-parse-results (doremi-text->collapsed-parse-tree 
+                             current kind)
+             ]
+; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
 
-(def notes-line-wrapper 
-  (with-meta notes-line
+
+            (log "****in parse, parse-results are" my-parse-results)
+            (log "in parse, app-state=" @app-state)
+            (swap! app-state assoc-in [:parse-results] my-parse-results)
+            (swap! app-state assoc-in [:last-text-parsed] current)
+            )
+          )))
+
+(defn start-parse-timer[]
+  (js/setInterval parse 2000))
+
+(def composition-wrapper 
+  (with-meta composition
              {:component-did-mount
               (fn[this]
-                (js/dom_fixes (js/$ (reagent/dom-node this))))
+                (.log js/console "starting timer")
+                (start-parse-timer)
+                (.log js/console "component-did-mount composition to call dom_fixes")
+                (js/dom_fixes (js/$ (reagent/dom-node this)))
+                )
 
               :component-did-update
-              (fn[this](js/dom_fixes (js/$ (reagent/dom-node this)))) 
+              (fn[this]
+                (.log js/console "component-did-update composition-about to call dom_fixes")
+                (js/dom_fixes (js/$ (reagent/dom-node this)))
+                ) 
               }
              ))
 
-
-;;;;       render: function () {
-;;;;         var item = this.props.item;
-;;;;         var placement = last(item)
-;;;;         var items = rest(item);
-;;;;         var filtered = items.filter(function (x) {
-;;;;           return isArray(x)
-;;;;         })
-;;;;         var ary = filtered.map(drawItem.bind(this));
-;;;;         return span({
-;;;;           className: "upper_attribute" + " " +
-;;;;             classNameFor(item) + " " + "placement_" +
-;;;;             placement,
-;;;;         }, ary)
-;;;;       }
 
 (defn ornament-pitch[{item :item
                       render-as :render-as}]
@@ -788,7 +816,7 @@
   (log "entering stave")
   (log item)
   ;;  (assert (is-a "stave" item))
-  [notes-line-wrapper {:item (second item)}]
+  [notes-line {:item (second item)}]
   )
 
 
@@ -1174,7 +1202,7 @@
   [:div.doremiBox
    [controls]
     [entry-area {:doremi-text (get @app-state :doremi-text)}]
-   [composition {:parsed (get-in @app-state [:parse-results,:parsed])
+   [composition-wrapper {:parsed (get-in @app-state [:parse-results,:parsed])
                  :render-as (get @app-state :render-as) 
                  } ]
    [staff-notation]
@@ -1186,42 +1214,18 @@
 (defn calling-component []
   [doremi-box])
 
+
 (defn init []
-  (reagent/render-component [calling-component]
-                            (.getElementById js/document "container")))
-(defn parse[]
-  (let [;; current (get @app-state :doremi-text)
-        elem (by-id "the_area")
-        current (.-value elem)
-        last-text-parsed (get @app-state :last-text-parsed)
-        ajax-is-running (get @app-state :ajax-is-running)
-        kind  (get @app-state :composition-kind)
-        ]
-       ;;(.log js/console "current="  current)
-    (cond 
-          (= nil current)
-          nil
-          (= "" current)
-          nil
-          (= current last-text-parsed)
-          nil
-          :else 
-          (let
-            [ ;;_ (log "should parse")
-             my-parse-results (doremi-text->collapsed-parse-tree 
-                             current kind)
-             ]
-; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
+  (reagent/render-component 
+    [calling-component]
+   (.getElementById js/document "container")))
 
 
-            (log "****in parse, parse-results are" my-parse-results)
-            (log "in parse, app-state=" @app-state)
-            (swap! app-state assoc-in [:parse-results] my-parse-results)
-            (swap! app-state assoc-in [:last-text-parsed] current)
-            )
-          )))
 
-(defn start-parse-timer[]
-  (js/setInterval parse 2000))
 
-(start-parse-timer)
+(defn expand_note_widths_to_accomodate_syllables[context]
+  (let [elements (dom/getElementsByTagNameAndClass "span" "syl" context)]
+    (my-log "expand_note_widths_to_accomodate_syllables")
+  (.log js/console "elements:" elements) 
+        ))
+
