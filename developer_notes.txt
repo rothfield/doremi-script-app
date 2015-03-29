@@ -1,0 +1,14 @@
+
+# start development environment
+boot dev
+
+# compile for production. Production code is in target
+boot cljs -O advanced
+
+# Use node's http-server to test the production code
+# install
+sudo npm install -g http-server
+
+# Test production code
+http-server target
+

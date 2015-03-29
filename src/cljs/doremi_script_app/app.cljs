@@ -16,7 +16,8 @@
     [instaparse.core :as insta] 
     ))
 
-
+;; TODO:  | S - - - |||  three barlines crashes the parser
+;;
 ;;(log "(-> | S-  doremi-text->parsed))" (-> "| S- " doremi-text->parsed))
 
 (defonce app-state
@@ -54,15 +55,12 @@
 
 (defn generate-staff-notation-xhr [url content]
   (log "entering generate-staff-notation-URL" url content)
+ 
   (let [
-        serialized (str "src=" 
-                        (my-url-encode (:src content))
-                        "&kind="
-                        (my-url-encode (name (:kind content)))
-                        )
-        serialized2 "src=SSS&kind=sargam-composition"
+        query-data (new js/goog.Uri.QueryData)
         ]
-    (log url serialized)    
+    (.set query-data "src"  (:src content))
+    (.set query-data "kind"  (name (:kind content)))
     (xhr/send url
               (fn [event]
                 (log "in callback")
@@ -80,7 +78,7 @@
                   (log "app-state is" @app-state)
                   ))
               "POST"
-              serialized)))
+              query-data)))
 
 ;;;;     
 ;;;;     . The Unicode character ♭(U+266D) is the flat sign. Its HTML entity is &#9837;.
@@ -355,9 +353,10 @@
 
 
 (defn entry-area [{doremi-text :doremi-text }]
-  [:textarea#the_area.entryArea
-   {:style
-    {:overflow "hidden"  :word-wrap "break-word"  :resize "horizontal"  :height "120.106669072752px" }
+  [:div.form-group
+   [:label {:for "entryArea"} "Enter Letter Notation:"]
+  [:textarea#the_area.entryArea.form-control
+   {
     :placeholder
     "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
     :name "src",
@@ -373,7 +372,7 @@
                new-val)
         ) 
       )
-    }])
+    }]])
 
 (defn draw-children[items]
   (doall (map-indexed
@@ -1080,13 +1079,14 @@
     :title "Generates staff notation and MIDI file using Lilypond",
     :name "generateStaffNotation"
     :on-click 
-    (fn []
+    (fn [e]
+       (.preventDefault e)
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
         {:src (get-in @app-state [:doremi-text])
          :kind (get-in @app-state [:composition-kind])
          })
-      false)
+      )
     }
    "Generate Staff Notation"
    ] 
@@ -1152,9 +1152,7 @@
 (defn doremi-box[]
   [:div.doremiBox
    [controls]
-   [:div.entryAreaBox.doremiContent
     [entry-area {:doremi-text (get @app-state :doremi-text)}]
-    ]
    [composition {:parsed (get-in @app-state [:parse-results,:parsed])
                  :render-as (get @app-state :render-as) 
                  } ]
