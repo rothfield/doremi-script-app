@@ -8,6 +8,7 @@
     [doremi-script-app.doremi_core :as doremi_core
      :refer [doremi-text->collapsed-parse-tree]]
     ;;  [goog.string :as gstring]
+    [goog.Uri :as guri] 
     [goog.net.XhrIo :as xhr]
     [goog.json :as gjson]
     [clojure.string :as string :refer [join]]
@@ -40,12 +41,6 @@
   (string/replace (name x) "-" "_")
   )
 
-(defn my-url-encode[s]
-  "Returns s as an URL encoded string."
-  (when s (-> (js/encodeURIComponent (str s))
-              (string/replace "*" "%2A"))))
-
-
 ;;(defn ajax-json [formName]  (let [action         (str (get-form-action formName) ".json")        formData     (.toObject (.getFormDataMap goog.dom.forms (dom/$ formName)))        serialized    (goog.json.serialize formData)]        (.send goog.net.XhrIo action callback  'POST' serialized )))
 
 (def generate-staff-notation-URL
@@ -57,7 +52,7 @@
   (log "entering generate-staff-notation-URL" url content)
  
   (let [
-        query-data (new js/goog.Uri.QueryData)
+        query-data (new guri/QueryData)
         ]
     (.set query-data "src"  (:src content))
     (.set query-data "kind"  (name (:kind content)))

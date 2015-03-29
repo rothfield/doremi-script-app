@@ -8,18 +8,18 @@ instaparse.transform.map_preserving_meta = (function map_preserving_meta(f,l){re
 * This variation of the merge-meta in gll does nothing if obj is not
 * something that can have a metamap attached.
 */
-instaparse.transform.merge_meta = (function merge_meta(obj,metamap){if((function (){var G__13081 = obj;if(G__13081)
-{var bit__4089__auto__ = (G__13081.cljs$lang$protocol_mask$partition0$ & (262144));if((bit__4089__auto__) || (G__13081.cljs$core$IWithMeta$))
+instaparse.transform.merge_meta = (function merge_meta(obj,metamap){if((function (){var G__13077 = obj;if(G__13077)
+{var bit__4089__auto__ = (G__13077.cljs$lang$protocol_mask$partition0$ & (262144));if((bit__4089__auto__) || (G__13077.cljs$core$IWithMeta$))
 {return true;
 } else
-{if((!G__13081.cljs$lang$protocol_mask$partition0$))
-{return cljs.core.native_satisfies_QMARK_(cljs.core.IWithMeta,G__13081);
+{if((!G__13077.cljs$lang$protocol_mask$partition0$))
+{return cljs.core.native_satisfies_QMARK_(cljs.core.IWithMeta,G__13077);
 } else
 {return false;
 }
 }
 } else
-{return cljs.core.native_satisfies_QMARK_(cljs.core.IWithMeta,G__13081);
+{return cljs.core.native_satisfies_QMARK_(cljs.core.IWithMeta,G__13077);
 }
 })())
 {return instaparse.gll.merge_meta(obj,metamap);
@@ -27,7 +27,7 @@ instaparse.transform.merge_meta = (function merge_meta(obj,metamap){if((function
 {return obj;
 }
 });
-instaparse.transform.enlive_transform = (function enlive_transform(transform_map,parse_tree){var transform = (function (){var G__13083 = cljs.core.constant$keyword$42.cljs$core$IFn$_invoke$arity$1(parse_tree);return (transform_map.cljs$core$IFn$_invoke$arity$1 ? transform_map.cljs$core$IFn$_invoke$arity$1(G__13083) : transform_map.call(null,G__13083));
+instaparse.transform.enlive_transform = (function enlive_transform(transform_map,parse_tree){var transform = (function (){var G__13079 = cljs.core.constant$keyword$42.cljs$core$IFn$_invoke$arity$1(parse_tree);return (transform_map.cljs$core$IFn$_invoke$arity$1 ? transform_map.cljs$core$IFn$_invoke$arity$1(G__13079) : transform_map.call(null,G__13079));
 })();if(cljs.core.truth_(transform))
 {return instaparse.transform.merge_meta(cljs.core.apply.cljs$core$IFn$_invoke$arity$2(transform,cljs.core.map.cljs$core$IFn$_invoke$arity$2(cljs.core.partial.cljs$core$IFn$_invoke$arity$2(enlive_transform,transform_map),cljs.core.constant$keyword$43.cljs$core$IFn$_invoke$arity$1(parse_tree))),cljs.core.meta(parse_tree));
 } else
@@ -40,7 +40,7 @@ instaparse.transform.enlive_transform = (function enlive_transform(transform_map
 }
 });
 instaparse.transform.hiccup_transform = (function hiccup_transform(transform_map,parse_tree){if((cljs.core.sequential_QMARK_(parse_tree)) && (cljs.core.seq(parse_tree)))
-{var temp__4124__auto__ = (function (){var G__13085 = cljs.core.first(parse_tree);return (transform_map.cljs$core$IFn$_invoke$arity$1 ? transform_map.cljs$core$IFn$_invoke$arity$1(G__13085) : transform_map.call(null,G__13085));
+{var temp__4124__auto__ = (function (){var G__13081 = cljs.core.first(parse_tree);return (transform_map.cljs$core$IFn$_invoke$arity$1 ? transform_map.cljs$core$IFn$_invoke$arity$1(G__13081) : transform_map.call(null,G__13081));
 })();if(cljs.core.truth_(temp__4124__auto__))
 {var transform = temp__4124__auto__;return instaparse.transform.merge_meta(cljs.core.apply.cljs$core$IFn$_invoke$arity$2(transform,cljs.core.map.cljs$core$IFn$_invoke$arity$2(cljs.core.partial.cljs$core$IFn$_invoke$arity$2(hiccup_transform,transform_map),cljs.core.next(parse_tree))),cljs.core.meta(parse_tree));
 } else
