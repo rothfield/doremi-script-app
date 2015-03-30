@@ -491,13 +491,13 @@
   (let [items (sel "span.note_wrapper *.pitch_sign")
         ]
     (dorun (map (fn[item]
-               (let
-                 [parent (dommy/parent item)]
-               (dommy/set-style! (dommy/parent item) 
-                                 :margin-right
-                                 (str (dommy/px item :width) "px")
-                                 )
-                 )) items))))
+                  (let
+                    [parent (dommy/parent item)]
+                    (dommy/set-style! (dommy/parent item) 
+                                      :margin-right
+                                      (str (dommy/px item :width) "px")
+                                      )
+                    )) items))))
 
 
 (defn add-left-margin-to-notes-with-left-superscripts[]
@@ -508,16 +508,16 @@
              (fn[item]
                (let
                  [parent (dommy/parent item)]
-               (dommy/set-style! item 
-                                 :margin-left
-                                 (str (* -1 
-                                         (dommy/px item :width)) "px"))
-               (dommy/set-style! parent 
-                                 :margin-left
-                                 (str (*  
-                                         (dommy/px item :width)) "px"))
-               )) items))
-  ))
+                 (dommy/set-style! item 
+                                   :margin-left
+                                   (str (* -1 
+                                           (dommy/px item :width)) "px"))
+                 (dommy/set-style! parent 
+                                   :margin-left
+                                   (str (*  
+                                          (dommy/px item :width)) "px"))
+                 )) items))
+    ))
 
 (defn add-right-margin-to-notes-with-right-superscripts[]
   ;; Not sure why it adjusts note_wrapper and not pitch??
@@ -534,6 +534,8 @@
                  )) items))
     ))
 
+
+
 ;;;;        return $('span.note-wrapper *.ornament.placement-after', context).each(function(index) {
 ;;;;          var current-margin-right, parent;
 ;;;;          parent = $(this).parent();
@@ -541,6 +543,34 @@
 ;;;;          return $(parent).css('margin-right', $(this).width());
 ;;;;        });
 ;;;;      };
+
+
+(defn adjust-slurs-in-dom[context]
+  (comment "html looks like"
+           [:span.measure
+            [:span.beat.looped
+             [:span.note_wrapper ]]
+            [:span#0.slur
+             ]
+            [:span.note.pitch "S"]
+            [:span.note_wrapper
+             {:data-begin-slur-id "0"}]
+            [:span.note.pitch "R"]])
+  (let [items (sel "span[data-begin-slur-id]")]
+    (dorun 
+      (map (fn[item]
+             (let
+               [ dom-id (dommy/attr item :data-begin-slur-id)
+                slur (.getElementById js/document dom-id)
+                rect1 (dommy/bounding-client-rect item)
+                rect2 (when slur (dommy/bounding-client-rect slur))
+                width (when slur (- (:right rect1) (:left rect2)))
+                ]
+               (log "adjust-slurs-in-dom" dom-id slur rect1 rect2 width)
+               (when slur
+                 (dommy/set-style! slur :width
+                                   (str width "px"))
+                 ))) items))))
 
 
 
@@ -580,6 +610,7 @@
   (add-right-margin-to-notes-with-right-superscripts)
   (add-left-margin-to-notes-with-left-superscripts)
   (add-right-margin-to-notes-with-pitch-signs this)
+  (adjust-slurs-in-dom this)
   )
 (def composition-wrapper 
   (with-meta composition
