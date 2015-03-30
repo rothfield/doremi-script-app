@@ -572,7 +572,29 @@
                                    (str width "px"))
                  ))) items))))
 
-
+(defn fallback-if-utf8-characters-not-supported[context]
+   ;;; TODO
+)
+;;;;      var tag, width1, width2;
+;;;;      if (context == null) {
+;;;;        context = null;
+;;;;      }
+;;;;      if (!(window.ok_to_use_utf8_music_characters != null)) {
+;;;;        width1 = $('#utf_left_repeat').show().width();
+;;;;        width2 = $('#utf_single_barline').show().width();
+;;;;        $('#utf_left_repeat').hide();
+;;;;        $('#utf_single_barline').hide();
+;;;;        window.ok_to_use_utf8_music_characters = width1 !== width2;
+;;;;      }
+;;;;      if (!window.ok_to_use_utf8_music_characters) {
+;;;;        tag = "data-fallback-if-no-utf8-chars";
+;;;;        $("span[" + tag + "]", context).addClass('dont_use_utf8_chars');
+;;;;        return $("span[" + tag + "]", context).each(function(index) {
+;;;;          var attr, obj;
+;;;;          obj = $(this);
+;;;;          attr = obj.attr(tag);
+;;;;          return obj.html(attr);
+;;;;        });
 
 (defn expand-note-widths-to-accomodate-syllables[context]
   (let [ items  (sel :.syl)]
@@ -606,11 +628,17 @@
              ))))
 
 (defn dom-fixes[this]
+  ;;; TODO: review if this is necessary
+		;;; $('.sargam_line .note',context).removeAttr("style");  
+  ;;;  new code 2015
+  ;;;
   (expand-note-widths-to-accomodate-syllables this)
   (add-right-margin-to-notes-with-right-superscripts)
   (add-left-margin-to-notes-with-left-superscripts)
   (add-right-margin-to-notes-with-pitch-signs this)
   (adjust-slurs-in-dom this)
+  (fallback-if-utf8-characters-not-supported this)
+  ;;145 dubois
   )
 (def composition-wrapper 
   (with-meta composition

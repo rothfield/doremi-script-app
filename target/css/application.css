@@ -6,6 +6,7 @@ div.composition {
   overflow:auto;
   height:300px;
 	resize:both;
+	border: 1px black solid;
 }
 .hidden {
 		display:none;
@@ -38,7 +39,7 @@ textarea.entryArea {
 	  overflow-x: scroll;
 		position:relative;
 		left:1em;
-		border:none;  /* 0px solid white; */
+}
 
 textarea:focus {
 		outline: none;
