@@ -48,28 +48,28 @@ var create_element__3 = (function (type,props,child){if(!(cljs.core.map_QMARK_.c
 return React.createElement(type,props,child);
 });
 var create_element__4 = (function() { 
-var G__6681__delegate = function (type,props,child,children){if(!(cljs.core.map_QMARK_.call(null,props)))
+var G__7645__delegate = function (type,props,child,children){if(!(cljs.core.map_QMARK_.call(null,props)))
 {} else
 {throw (new Error(("Assert failed: "+cljs.core.str.cljs$core$IFn$_invoke$arity$1(cljs.core.pr_str.call(null,cljs.core.list(new cljs.core.Symbol(null,"not","not",1044554643,null),cljs.core.list(new cljs.core.Symbol(null,"map?","map?",-1780568534,null),new cljs.core.Symbol(null,"props","props",2093813254,null))))))));
 }
 return cljs.core.apply.call(null,React.createElement,type,props,child,children);
 };
-var G__6681 = function (type,props,child,var_args){
+var G__7645 = function (type,props,child,var_args){
 var children = null;if (arguments.length > 3) {
   children = cljs.core.array_seq(Array.prototype.slice.call(arguments, 3),0);} 
-return G__6681__delegate.call(this,type,props,child,children);};
-G__6681.cljs$lang$maxFixedArity = 3;
-G__6681.cljs$lang$applyTo = (function (arglist__6682){
-var type = cljs.core.first(arglist__6682);
-arglist__6682 = cljs.core.next(arglist__6682);
-var props = cljs.core.first(arglist__6682);
-arglist__6682 = cljs.core.next(arglist__6682);
-var child = cljs.core.first(arglist__6682);
-var children = cljs.core.rest(arglist__6682);
-return G__6681__delegate(type,props,child,children);
+return G__7645__delegate.call(this,type,props,child,children);};
+G__7645.cljs$lang$maxFixedArity = 3;
+G__7645.cljs$lang$applyTo = (function (arglist__7646){
+var type = cljs.core.first(arglist__7646);
+arglist__7646 = cljs.core.next(arglist__7646);
+var props = cljs.core.first(arglist__7646);
+arglist__7646 = cljs.core.next(arglist__7646);
+var child = cljs.core.first(arglist__7646);
+var children = cljs.core.rest(arglist__7646);
+return G__7645__delegate(type,props,child,children);
 });
-G__6681.cljs$core$IFn$_invoke$arity$variadic = G__6681__delegate;
-return G__6681;
+G__7645.cljs$core$IFn$_invoke$arity$variadic = G__7645__delegate;
+return G__7645;
 })()
 ;
 create_element = function(type,props,child,var_args){
@@ -150,9 +150,9 @@ reagent.core.unmount_component_at_node = (function unmount_component_at_node(con
 /**
 * Turns a component into an HTML string.
 */
-reagent.core.render_to_string = (function render_to_string(component){var _STAR_non_reactive_STAR_6684 = reagent.impl.component._STAR_non_reactive_STAR_;try{reagent.impl.component._STAR_non_reactive_STAR_ = true;
+reagent.core.render_to_string = (function render_to_string(component){var _STAR_non_reactive_STAR_7648 = reagent.impl.component._STAR_non_reactive_STAR_;try{reagent.impl.component._STAR_non_reactive_STAR_ = true;
 return (React["renderToString"])(reagent.core.as_element.call(null,component));
-}finally {reagent.impl.component._STAR_non_reactive_STAR_ = _STAR_non_reactive_STAR_6684;
+}finally {reagent.impl.component._STAR_non_reactive_STAR_ = _STAR_non_reactive_STAR_7648;
 }});
 reagent.core.as_component = reagent.core.as_element;
 reagent.core.render_component = reagent.core.render;
@@ -160,9 +160,9 @@ reagent.core.render_component_to_string = reagent.core.render_to_string;
 /**
 * Turns a component into an HTML string, without data-react-id attributes, etc.
 */
-reagent.core.render_to_static_markup = (function render_to_static_markup(component){var _STAR_non_reactive_STAR_6686 = reagent.impl.component._STAR_non_reactive_STAR_;try{reagent.impl.component._STAR_non_reactive_STAR_ = true;
+reagent.core.render_to_static_markup = (function render_to_static_markup(component){var _STAR_non_reactive_STAR_7650 = reagent.impl.component._STAR_non_reactive_STAR_;try{reagent.impl.component._STAR_non_reactive_STAR_ = true;
 return (React["renderToStaticMarkup"])(reagent.core.as_element.call(null,component));
-}finally {reagent.impl.component._STAR_non_reactive_STAR_ = _STAR_non_reactive_STAR_6686;
+}finally {reagent.impl.component._STAR_non_reactive_STAR_ = _STAR_non_reactive_STAR_7650;
 }});
 reagent.core.force_update_all = (function force_update_all(){return reagent.impl.util.force_update_all.call(null);
 });
@@ -295,20 +295,20 @@ var atom = null;
 var atom__1 = (function (x){return reagent.ratom.atom.call(null,x);
 });
 var atom__2 = (function() { 
-var G__6687__delegate = function (x,rest){return cljs.core.apply.call(null,reagent.ratom.atom,x,rest);
+var G__7651__delegate = function (x,rest){return cljs.core.apply.call(null,reagent.ratom.atom,x,rest);
 };
-var G__6687 = function (x,var_args){
+var G__7651 = function (x,var_args){
 var rest = null;if (arguments.length > 1) {
   rest = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1),0);} 
-return G__6687__delegate.call(this,x,rest);};
-G__6687.cljs$lang$maxFixedArity = 1;
-G__6687.cljs$lang$applyTo = (function (arglist__6688){
-var x = cljs.core.first(arglist__6688);
-var rest = cljs.core.rest(arglist__6688);
-return G__6687__delegate(x,rest);
+return G__7651__delegate.call(this,x,rest);};
+G__7651.cljs$lang$maxFixedArity = 1;
+G__7651.cljs$lang$applyTo = (function (arglist__7652){
+var x = cljs.core.first(arglist__7652);
+var rest = cljs.core.rest(arglist__7652);
+return G__7651__delegate(x,rest);
 });
-G__6687.cljs$core$IFn$_invoke$arity$variadic = G__6687__delegate;
-return G__6687;
+G__7651.cljs$core$IFn$_invoke$arity$variadic = G__7651__delegate;
+return G__7651;
 })()
 ;
 atom = function(x,var_args){
@@ -358,11 +358,11 @@ var args = null;if (arguments.length > 2) {
   args = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2),0);} 
 return wrap__delegate.call(this,value,reset_fn,args);};
 wrap.cljs$lang$maxFixedArity = 2;
-wrap.cljs$lang$applyTo = (function (arglist__6689){
-var value = cljs.core.first(arglist__6689);
-arglist__6689 = cljs.core.next(arglist__6689);
-var reset_fn = cljs.core.first(arglist__6689);
-var args = cljs.core.rest(arglist__6689);
+wrap.cljs$lang$applyTo = (function (arglist__7653){
+var value = cljs.core.first(arglist__7653);
+arglist__7653 = cljs.core.next(arglist__7653);
+var reset_fn = cljs.core.first(arglist__7653);
+var args = cljs.core.rest(arglist__7653);
 return wrap__delegate(value,reset_fn,args);
 });
 wrap.cljs$core$IFn$_invoke$arity$variadic = wrap__delegate;
@@ -415,9 +415,9 @@ var args = null;if (arguments.length > 1) {
   args = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1),0);} 
 return partial__delegate.call(this,f,args);};
 partial.cljs$lang$maxFixedArity = 1;
-partial.cljs$lang$applyTo = (function (arglist__6690){
-var f = cljs.core.first(arglist__6690);
-var args = cljs.core.rest(arglist__6690);
+partial.cljs$lang$applyTo = (function (arglist__7654){
+var f = cljs.core.first(arglist__7654);
+var args = cljs.core.rest(arglist__7654);
 return partial__delegate(f,args);
 });
 partial.cljs$core$IFn$_invoke$arity$variadic = partial__delegate;

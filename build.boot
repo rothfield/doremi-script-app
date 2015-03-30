@@ -8,6 +8,7 @@
  [org.clojure/clojure "1.6.0"]
   [org.clojure/core.async "0.1.346.0-17112a-alpha"]
  [com.lucasbradstreet/instaparse-cljs "1.3.5"]
+ [prismatic/dommy "1.0.0"]
  [reagent "0.5.0-alpha3"]])
 
 (require

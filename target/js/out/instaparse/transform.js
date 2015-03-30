@@ -8,18 +8,18 @@ instaparse.transform.map_preserving_meta = (function map_preserving_meta(f,l){re
 * This variation of the merge-meta in gll does nothing if obj is not
 * something that can have a metamap attached.
 */
-instaparse.transform.merge_meta = (function merge_meta(obj,metamap){if((function (){var G__6547 = obj;if(G__6547)
-{var bit__4089__auto__ = (G__6547.cljs$lang$protocol_mask$partition0$ & (262144));if((bit__4089__auto__) || (G__6547.cljs$core$IWithMeta$))
+instaparse.transform.merge_meta = (function merge_meta(obj,metamap){if((function (){var G__7511 = obj;if(G__7511)
+{var bit__4089__auto__ = (G__7511.cljs$lang$protocol_mask$partition0$ & (262144));if((bit__4089__auto__) || (G__7511.cljs$core$IWithMeta$))
 {return true;
 } else
-{if((!G__6547.cljs$lang$protocol_mask$partition0$))
-{return cljs.core.native_satisfies_QMARK_.call(null,cljs.core.IWithMeta,G__6547);
+{if((!G__7511.cljs$lang$protocol_mask$partition0$))
+{return cljs.core.native_satisfies_QMARK_.call(null,cljs.core.IWithMeta,G__7511);
 } else
 {return false;
 }
 }
 } else
-{return cljs.core.native_satisfies_QMARK_.call(null,cljs.core.IWithMeta,G__6547);
+{return cljs.core.native_satisfies_QMARK_.call(null,cljs.core.IWithMeta,G__7511);
 }
 })())
 {return instaparse.gll.merge_meta.call(null,obj,metamap);

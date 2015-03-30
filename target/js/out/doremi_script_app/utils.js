@@ -12,7 +12,7 @@ doremi_script_app.utils.my_log = (function my_log(x){return console.log(x);
 * @param {...*} var_args
 */
 doremi_script_app.utils.my_log2 = (function() { 
-var my_log2__delegate = function (my_args){return cljs.core.dorun.call(null,cljs.core.map.call(null,(function (p1__8423_SHARP_){return doremi_script_app.utils.my_log.call(null,JSON.stringify(cljs.core.clj__GT_js.call(null,p1__8423_SHARP_)));
+var my_log2__delegate = function (my_args){return cljs.core.dorun.call(null,cljs.core.map.call(null,(function (p1__9470_SHARP_){return doremi_script_app.utils.my_log.call(null,JSON.stringify(cljs.core.clj__GT_js.call(null,p1__9470_SHARP_)));
 }),my_args));
 };
 var my_log2 = function (var_args){
@@ -20,8 +20,8 @@ var my_args = null;if (arguments.length > 0) {
   my_args = cljs.core.array_seq(Array.prototype.slice.call(arguments, 0),0);} 
 return my_log2__delegate.call(this,my_args);};
 my_log2.cljs$lang$maxFixedArity = 0;
-my_log2.cljs$lang$applyTo = (function (arglist__8424){
-var my_args = cljs.core.seq(arglist__8424);
+my_log2.cljs$lang$applyTo = (function (arglist__9471){
+var my_args = cljs.core.seq(arglist__9471);
 return my_log2__delegate(my_args);
 });
 my_log2.cljs$core$IFn$_invoke$arity$variadic = my_log2__delegate;
@@ -35,7 +35,7 @@ doremi_script_app.utils.log = (function() {
 var log__delegate = function (my_args){if(cljs.core.truth_(cljs.core.deref.call(null,doremi_script_app.utils.log_off)))
 {return null;
 } else
-{return cljs.core.dorun.call(null,cljs.core.map.call(null,(function (p1__8425_SHARP_){return doremi_script_app.utils.my_log.call(null,JSON.stringify(cljs.core.clj__GT_js.call(null,p1__8425_SHARP_)));
+{return cljs.core.dorun.call(null,cljs.core.map.call(null,(function (p1__9472_SHARP_){return doremi_script_app.utils.my_log.call(null,JSON.stringify(cljs.core.clj__GT_js.call(null,p1__9472_SHARP_)));
 }),my_args));
 }
 };
@@ -44,8 +44,8 @@ var my_args = null;if (arguments.length > 0) {
   my_args = cljs.core.array_seq(Array.prototype.slice.call(arguments, 0),0);} 
 return log__delegate.call(this,my_args);};
 log.cljs$lang$maxFixedArity = 0;
-log.cljs$lang$applyTo = (function (arglist__8426){
-var my_args = cljs.core.seq(arglist__8426);
+log.cljs$lang$applyTo = (function (arglist__9473){
+var my_args = cljs.core.seq(arglist__9473);
 return log__delegate(my_args);
 });
 log.cljs$core$IFn$_invoke$arity$variadic = log__delegate;

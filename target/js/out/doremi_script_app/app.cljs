@@ -7,12 +7,12 @@
     [doremi-script-app.utils :refer [my-log2 my-log by-id log is-a] ]
     [doremi-script-app.doremi_core :as doremi_core
      :refer [doremi-text->collapsed-parse-tree]]
-    ;;  [goog.string :as gstring]
     [goog.dom :as dom]
     [goog.Uri :as guri] 
     [goog.net.XhrIo :as xhr]
     [goog.json :as gjson]
     [clojure.string :as string :refer [join]]
+    [dommy.core :as dommy :refer-macros [sel sel1]]
     ;;  [cljs.core.async :refer [<! chan close!]]
     [reagent.core :as reagent :refer [atom]]
     [instaparse.core :as insta] 
@@ -53,7 +53,7 @@
 
 (defn generate-staff-notation-xhr [url content]
   (log "entering generate-staff-notation-URL" url content)
- 
+
   (let [
         query-data (new guri/QueryData)
         ]
@@ -346,8 +346,8 @@
 ;;;;     },
 
 (def text-area-placeholder
-    "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
-)
+  "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
+  )
 
 (defn entry-area []
   ;; see https://github.com/jonase/reagent-tutorial
@@ -355,21 +355,21 @@
         _ (.log js/console "initing entry-area,last-text-value=" @last-text-value)
         last-val @last-text-value
         my-val (reagent/atom last-val)
-                 ]
+        ]
     (fn []
-  [:div.form-group
-   [:label {:for "entryArea"} "Enter Letter Notation:"]
-  [:textarea#the_area.entryArea.form-control
-   {
-    :placeholder text-area-placeholder
-    :name "src",
-    :value @my-val
-    :spellCheck false
-    :on-change (fn[x]
-                 (reset! my-val (-> x .-target .-value))
-                 (reset! last-text-value @my-val)
-                 )
-    }]])))
+      [:div.form-group
+       [:label {:for "entryArea"} "Enter Letter Notation:"]
+       [:textarea#the_area.entryArea.form-control
+        {
+         :placeholder text-area-placeholder
+         :name "src",
+         :value @my-val
+         :spellCheck false
+         :on-change (fn[x]
+                      (reset! my-val (-> x .-target .-value))
+                      (reset! last-text-value @my-val)
+                      )
+         }]])))
 
 
 
@@ -377,24 +377,24 @@
 (defn zentry-area [{doremi-text :doremi-text }]
   [:div.form-group
    [:label {:for "entryArea"} "Enter Letter Notation:"]
-  [:textarea#the_area.entryArea.form-control
-   {
-    :placeholder
-    "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
-    :name "src",
-    :value doremi-text
-    :spellCheck false
-    :on-change 
-    (fn[x] 
-      (let [new-val
-            (-> x .-target .-value)
-            ]
-        (swap! app-state assoc-in
-               [:doremi-text]
-               new-val)
-        ) 
-      )
-    }]])
+   [:textarea#the_area.entryArea.form-control
+    {
+     :placeholder
+     "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
+     :name "src",
+     :value doremi-text
+     :spellCheck false
+     :on-change 
+     (fn[x] 
+       (let [new-val
+             (-> x .-target .-value)
+             ]
+         (swap! app-state assoc-in
+                [:doremi-text]
+                new-val)
+         ) 
+       )
+     }]])
 
 (defn draw-children[items]
   (doall (map-indexed
@@ -438,6 +438,7 @@
 ;; var items = rest(item);
 ;;
 (defn parse[]
+  (when (by-id "the_area")
   (let [;; current (get @app-state :doremi-text)
         elem (by-id "the_area")
         current (.-value elem)
@@ -445,47 +446,114 @@
         ajax-is-running (get @app-state :ajax-is-running)
         kind  (get @app-state :composition-kind)
         ]
-       ;;(.log js/console "current="  current)
+    ;;(.log js/console "current="  current)
     (cond 
-          (= nil current)
-          nil
-          (= "" current)
-          nil
-          (= current last-text-parsed)
-          nil
-          :else 
-          (let
-            [ ;;_ (log "should parse")
-             my-parse-results (doremi-text->collapsed-parse-tree 
-                             current kind)
-             ]
-; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
+      (= nil current)
+      nil
+      (= "" current)
+      nil
+      (= current last-text-parsed)
+      nil
+      :else 
+      (let
+        [ ;;_ (log "should parse")
+         my-parse-results (doremi-text->collapsed-parse-tree 
+                            current kind)
+         ]
+        ; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
 
 
-            (log "****in parse, parse-results are" my-parse-results)
-            (log "in parse, app-state=" @app-state)
-            (swap! app-state assoc-in [:parse-results] my-parse-results)
-            (swap! app-state assoc-in [:last-text-parsed] current)
-            )
-          )))
+        (log "****in parse, parse-results are" my-parse-results)
+        (log "in parse, app-state=" @app-state)
+        (swap! app-state assoc-in [:parse-results] my-parse-results)
+        (swap! app-state assoc-in [:last-text-parsed] current)
+        )
+      ))))
 
 (defn start-parse-timer[]
   (js/setInterval parse 2000))
+
+(defn expand-note-widths-to-accomodate-syllables[context]
+    (prn "expand_note_widths_to_accomodate_syllables")
+ (let [ items  (sel :.syl)]
+     ;; (prn "items" items)
+   (dorun (map-indexed 
+      (fn[idx item]
+        (when-not (= idx (dec (count items))) ;; omit last syllable on line
+        (let
+         [ syl (dommy/text item)
+           ends-word (= (last syl) "-")
+           extra (if ends-word 5 0)
+           next-syl (get items (inc idx)) 
+          width (dommy/px item :width)
+          bounding-rect (dommy/bounding-client-rect item)
+          next-left (:left (dommy/bounding-client-rect next-syl))
+          left (:left bounding-rect)
+          syl-right (+ (dommy/px item :width)
+                       (:left (dommy/bounding-client-rect item)))
+          par (dommy/parent item)
+          children (dommy/children par)
+       ;;   note (-> (dommy/children par) (sel1 :.note)) 
+          pitch (filter (fn[x] 
+                       (not= -1
+                             (.indexOf (dommy/class x) "pitch")))
+                        (array-seq
+                          (dommy/children (dommy/parent item))))
+          ] 
+          (prn "pitch" pitch)
+        (when (= 
+                (:top (dommy/bounding-client-rect item))
+                (:top (dommy/bounding-client-rect next-syl)))
+        (dommy/set-style! par :background-color "red" )
+       (prn "parent class" (dommy/class par))
+       ;;(prn (dorun  (map dommy/class children)))
+       ;; (prn (map dommy/class (dommy/children par)))
+       ;; (prn "note" note)
+
+        (prn "bounding-rect" bounding-rect)
+        (prn "idx item syl ends-word extra next-syl width" idx item syl ends-word extra next-syl width)
+        (prn (get items 0))))))
+      items))
+   
+  ))
+
+;;;;    (for [item 
+;;;;      (fn[x item]
+;;;;        (let [
+;;;;           syl (dommy/text item)
+;;;;           ends-word (= (last syl) "-")
+;;;;           extra (if ends-word 5 0) 
+;;;;           ]
+;;;;      (.log js/console "syl" syl)
+;;;;      (.log js/console "ends-word" ends-word)
+;;;;      (.log js/console "item" item)
+;;;;      (dommy/set-text! item "john")))
+;;;;  (into [] (sel :.syl))))
+
+
+;;;;      (for [item (sel :.syl)]
+;;;;        (let
+;;;;        [syl (dommy/text item)]
+;;;;          (.log js/console "syl is " syl)
+;;;;          (dommy/set-style! item { :background-color "red" }
+;;;;                            ))
+;;;;     ))
+
 
 (def composition-wrapper 
   (with-meta composition
              {:component-did-mount
               (fn[this]
-                (.log js/console "starting timer")
-                (start-parse-timer)
                 (.log js/console "component-did-mount composition to call dom_fixes")
-                (js/dom_fixes (js/$ (reagent/dom-node this)))
+              ;;  (js/dom_fixes (js/$ (reagent/dom-node this)))
+                (expand-note-widths-to-accomodate-syllables (reagent/dom-node this))
                 )
 
               :component-did-update
               (fn[this]
                 (.log js/console "component-did-update composition-about to call dom_fixes")
                 (js/dom_fixes (js/$ (reagent/dom-node this)))
+                (expand-note-widths-to-accomodate-syllables (reagent/dom-node this))
                 ) 
               }
              ))
@@ -1098,17 +1166,17 @@
   )
 (defn render-as-box[]
   [:div.form-group ;;selectNotationBox
-  ;;[:div.RenderAsBox
+   ;;[:div.RenderAsBox
    [:label { :for "renderAs"} "Render as:"]
    [:select#renderAs.renderAs.form-control
     {:value (name (get @app-state :render-as))
-                      :on-change 
-                      #(swap! app-state 
-                              assoc
-                              :render-as
-                              (keyword (-> % .-target .-value))
-                              )
-                      }
+     :on-change 
+     #(swap! app-state 
+             assoc
+             :render-as
+             (keyword (-> % .-target .-value))
+             )
+     }
     [:option {:value nil}]
     [:option {:value :abc-composition}
      "ABC"]
@@ -1129,7 +1197,7 @@
     :name "generateStaffNotation"
     :on-click 
     (fn [e]
-       (.preventDefault e)
+      (.preventDefault e)
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
         {:src @last-text-value
@@ -1143,68 +1211,68 @@
 
 (defn header[]
   ;; currently unused
-   [:h3
-    "Enter letter music notation using 1234567CDEFGABC DoReMi (using drmfslt or DRMFSLT) SRGmPDN or devanagri: सर ग़म म'प धऩ\n\n"]
+  [:h3
+   "Enter letter music notation using 1234567CDEFGABC DoReMi (using drmfslt or DRMFSLT) SRGmPDN or devanagri: सर ग़म म'प धऩ\n\n"]
   )
 
 (defn toggle-lilypond-button[]
   ;; currently unused
-    [:button.toggleButton
-     "Lilypond"]
+  [:button.toggleButton
+   "Lilypond"]
   )
 (defn play-midi-file[]
   ;; currently unused
-    [:a.hidden
-     "Play MIDI File(Turn Volume Up!)"]
+  [:a.hidden
+   "Play MIDI File(Turn Volume Up!)"]
   )
 (defn toggle-staff-notation-button[]
   ;; currently unused
-    [:button.toggleButton
-     "Staff Notation Hide/Show"]
+  [:button.toggleButton
+   "Staff Notation Hide/Show"]
   )
 (defn other-unused[]
   [:div
-    [:a
-     {
-      :href
-      "https://rawgithub.com/rothfield/doremi-script/master/test/good_test_results/report.html",
-      :target "_blank",
-      :title "Opens in new window"}
-     "Visual test suite"
-     ]
-    [:a
-     {
-      :href "https://github.com/rothfield/doremi-script#readme",
-      :target "_blank",
-      :title "Opens in new window"
-      }
-     "Help"]
-])
+   [:a
+    {
+     :href
+     "https://rawgithub.com/rothfield/doremi-script/master/test/good_test_results/report.html",
+     :target "_blank",
+     :title "Opens in new window"}
+    "Visual test suite"
+    ]
+   [:a
+    {
+     :href "https://github.com/rothfield/doremi-script#readme",
+     :target "_blank",
+     :title "Opens in new window"
+     }
+    "Help"]
+   ])
 
 (defn controls[]
   [:form.form-inline
-    [select-notation-box (get @app-state :kind)]
-    [render-as-box (get @app-state :render-as)]
-    [generate-staff-notation-button]
+   [select-notation-box (get @app-state :kind)]
+   [render-as-box (get @app-state :render-as)]
+   [generate-staff-notation-button]
    ]
   )
 (defn parse-failed[]
   ;;; unused
-   [:div.compositionParseFailed.hidden
-    [:pre 
-     [:div.lilypondDisplay.hidden 
-      [:img#staff_notation
-       :name "",
-       :src "/images/blank.png?1426699590838"]]]]
+  [:div.compositionParseFailed.hidden
+   [:pre 
+    [:div.lilypondDisplay.hidden 
+     [:img#staff_notation
+      :name "",
+      :src "/images/blank.png?1426699590838"]]]]
   )
 
 (defn doremi-box[]
   [:div.doremiBox
    [controls]
-    [entry-area {:doremi-text (get @app-state :doremi-text)}]
+   [entry-area {:doremi-text (get @app-state :doremi-text)}]
    [composition-wrapper {:parsed (get-in @app-state [:parse-results,:parsed])
-                 :render-as (get @app-state :render-as) 
-                 } ]
+                         :render-as (get @app-state :render-as) 
+                         } ]
    [staff-notation]
    [parse-results-box {:parsed (get-in @app-state [:parse-results,:parsed])}]
    ]
@@ -1218,14 +1286,12 @@
 (defn init []
   (reagent/render-component 
     [calling-component]
-   (.getElementById js/document "container")))
+    (.getElementById js/document "container"))
+     (.log js/console "starting timer")
+     (start-parse-timer)
+  )
 
 
 
 
-(defn expand_note_widths_to_accomodate_syllables[context]
-  (let [elements (dom/getElementsByTagNameAndClass "span" "syl" context)]
-    (my-log "expand_note_widths_to_accomodate_syllables")
-  (.log js/console "elements:" elements) 
-        ))
 

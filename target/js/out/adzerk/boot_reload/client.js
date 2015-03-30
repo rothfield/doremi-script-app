@@ -28,41 +28,41 @@ return goog.global.CLOSURE_IMPORT_SCRIPT = (function (file){if(cljs.core.truth_(
 * @param {...*} var_args
 */
 adzerk.boot_reload.client.connect = (function() { 
-var connect__delegate = function (url,p__6927){var vec__6929 = p__6927;var opts = cljs.core.nth.call(null,vec__6929,(0),null);var conn = adzerk.boot_reload.websocket.websocket_connection.call(null);adzerk.boot_reload.client.patch_goog_base_BANG_.call(null);
+var connect__delegate = function (url,p__7891){var vec__7893 = p__7891;var opts = cljs.core.nth.call(null,vec__7893,(0),null);var conn = adzerk.boot_reload.websocket.websocket_connection.call(null);adzerk.boot_reload.client.patch_goog_base_BANG_.call(null);
 cljs.core.reset_BANG_.call(null,adzerk.boot_reload.client.ws_conn,conn);
-clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"opened","opened",-1451743091),((function (conn,vec__6929,opts){
+clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"opened","opened",-1451743091),((function (conn,vec__7893,opts){
 return (function (evt){clojure.browser.net.transmit.call(null,conn,cljs.core.pr_str.call(null,window.location.protocol));
 return console.info("Reload websocket connected.");
-});})(conn,vec__6929,opts))
+});})(conn,vec__7893,opts))
 );
-clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"message","message",-406056002),((function (conn,vec__6929,opts){
+clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"message","message",-406056002),((function (conn,vec__7893,opts){
 return (function (evt){var msg = cljs.reader.read_string.call(null,evt.message);if(cljs.core.vector_QMARK_.call(null,msg))
 {return adzerk.boot_reload.reload.reload.call(null,opts,msg);
 } else
 {return null;
 }
-});})(conn,vec__6929,opts))
+});})(conn,vec__7893,opts))
 );
-clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"closed","closed",-919675359),((function (conn,vec__6929,opts){
+clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"closed","closed",-919675359),((function (conn,vec__7893,opts){
 return (function (evt){cljs.core.reset_BANG_.call(null,adzerk.boot_reload.client.ws_conn,null);
 return console.info("Reload websocket connection closed.");
-});})(conn,vec__6929,opts))
+});})(conn,vec__7893,opts))
 );
-clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"error","error",-978969032),((function (conn,vec__6929,opts){
+clojure.browser.event.listen.call(null,conn,new cljs.core.Keyword(null,"error","error",-978969032),((function (conn,vec__7893,opts){
 return (function (evt){return console.error("Reload websocket error:",evt);
-});})(conn,vec__6929,opts))
+});})(conn,vec__7893,opts))
 );
 return clojure.browser.net.connect.call(null,conn,url);
 };
 var connect = function (url,var_args){
-var p__6927 = null;if (arguments.length > 1) {
-  p__6927 = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1),0);} 
-return connect__delegate.call(this,url,p__6927);};
+var p__7891 = null;if (arguments.length > 1) {
+  p__7891 = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1),0);} 
+return connect__delegate.call(this,url,p__7891);};
 connect.cljs$lang$maxFixedArity = 1;
-connect.cljs$lang$applyTo = (function (arglist__6930){
-var url = cljs.core.first(arglist__6930);
-var p__6927 = cljs.core.rest(arglist__6930);
-return connect__delegate(url,p__6927);
+connect.cljs$lang$applyTo = (function (arglist__7894){
+var url = cljs.core.first(arglist__7894);
+var p__7891 = cljs.core.rest(arglist__7894);
+return connect__delegate(url,p__7891);
 });
 connect.cljs$core$IFn$_invoke$arity$variadic = connect__delegate;
 return connect;
