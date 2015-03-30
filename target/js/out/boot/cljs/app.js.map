@@ -1,7 +1,0 @@
-{"version":3,
- "file":
- "/home/john/.boot/cache/tmp/home/john/doremi-script-app/33h/-fmbdw2/out/boot/cljs/app.js",
- "sources":["app.cljs"],
- "lineCount":9,
- "mappings":";AAAA;;;;;AAEA,AAAI,AAACA",
- "names":["doremi-script-app.app/init"]}

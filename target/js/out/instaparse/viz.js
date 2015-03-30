@@ -8,7 +8,7 @@ goog.require('cljs.core');
 * with substrings.
 * Returns nil if no span metadata is attached.
 */
-instaparse.viz.span = (function span(tree){var m = cljs.core.meta.call(null,tree);var s = new cljs.core.Keyword("instaparse.gll","start-index","instaparse.gll/start-index",404653620).cljs$core$IFn$_invoke$arity$1(m);var e = new cljs.core.Keyword("instaparse.gll","end-index","instaparse.gll/end-index",-1851404441).cljs$core$IFn$_invoke$arity$1(m);if(cljs.core.truth_((function (){var and__3413__auto__ = s;if(cljs.core.truth_(and__3413__auto__))
+instaparse.viz.span = (function span(tree){var m = cljs.core.meta(tree);var s = cljs.core.constant$keyword$92.cljs$core$IFn$_invoke$arity$1(m);var e = cljs.core.constant$keyword$93.cljs$core$IFn$_invoke$arity$1(m);if(cljs.core.truth_((function (){var and__3413__auto__ = s;if(cljs.core.truth_(and__3413__auto__))
 {return e;
 } else
 {return and__3413__auto__;
@@ -19,5 +19,3 @@ instaparse.viz.span = (function span(tree){var m = cljs.core.meta.call(null,tree
 {return null;
 }
 });
-
-//# sourceMappingURL=viz.js.map
