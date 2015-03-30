@@ -1,2 +1,2 @@
 (ns adzerk.boot-reload (:require [adzerk.boot-reload.client :as client] doremi-script-app.app))
-(when-not (client/alive?) (client/connect "ws://localhost:57955" {:on-jsload (fn* [] (doremi-script-app.app/init))}))
+(when-not (client/alive?) (client/connect "ws://localhost:51407" {:on-jsload (fn* [] (doremi-script-app.app/init))}))

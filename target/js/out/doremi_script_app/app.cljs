@@ -439,121 +439,162 @@
 ;;
 (defn parse[]
   (when (by-id "the_area")
-  (let [;; current (get @app-state :doremi-text)
-        elem (by-id "the_area")
-        current (.-value elem)
-        last-text-parsed (get @app-state :last-text-parsed)
-        ajax-is-running (get @app-state :ajax-is-running)
-        kind  (get @app-state :composition-kind)
-        ]
-    ;;(.log js/console "current="  current)
-    (cond 
-      (= nil current)
-      nil
-      (= "" current)
-      nil
-      (= current last-text-parsed)
-      nil
-      :else 
-      (let
-        [ ;;_ (log "should parse")
-         my-parse-results (doremi-text->collapsed-parse-tree 
-                            current kind)
-         ]
-        ; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
+    (let [;; current (get @app-state :doremi-text)
+          elem (by-id "the_area")
+          current (.-value elem)
+          last-text-parsed (get @app-state :last-text-parsed)
+          ajax-is-running (get @app-state :ajax-is-running)
+          kind  (get @app-state :composition-kind)
+          ]
+      ;;(.log js/console "current="  current)
+      (cond 
+        (= nil current)
+        nil
+        (= "" current)
+        nil
+        (= current last-text-parsed)
+        nil
+        :else 
+        (let
+          [ ;;_ (log "should parse")
+           my-parse-results (doremi-text->collapsed-parse-tree 
+                              current kind)
+           ]
+          ; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
 
 
-        (log "****in parse, parse-results are" my-parse-results)
-        (log "in parse, app-state=" @app-state)
-        (swap! app-state assoc-in [:parse-results] my-parse-results)
-        (swap! app-state assoc-in [:last-text-parsed] current)
-        )
-      ))))
+          (log "****in parse, parse-results are" my-parse-results)
+          (log "in parse, app-state=" @app-state)
+          (swap! app-state assoc-in [:parse-results] my-parse-results)
+          (swap! app-state assoc-in [:last-text-parsed] current)
+          )
+        ))))
 
 (defn start-parse-timer[]
   (js/setInterval parse 2000))
 
-(defn expand-note-widths-to-accomodate-syllables[context]
-    (prn "expand_note_widths_to_accomodate_syllables")
- (let [ items  (sel :.syl)]
-     ;; (prn "items" items)
-   (dorun (map-indexed 
-      (fn[idx item]
-        (when-not (= idx (dec (count items))) ;; omit last syllable on line
-        (let
-         [ syl (dommy/text item)
-           ends-word (= (last syl) "-")
-           extra (if ends-word 5 0)
-           next-syl (get items (inc idx)) 
-          width (dommy/px item :width)
-          bounding-rect (dommy/bounding-client-rect item)
-          next-left (:left (dommy/bounding-client-rect next-syl))
-          left (:left bounding-rect)
-          syl-right (+ (dommy/px item :width)
-                       (:left (dommy/bounding-client-rect item)))
-          par (dommy/parent item)
-          children (dommy/children par)
-       ;;   note (-> (dommy/children par) (sel1 :.note)) 
-          pitch (filter (fn[x] 
-                       (not= -1
-                             (.indexOf (dommy/class x) "pitch")))
-                        (array-seq
-                          (dommy/children (dommy/parent item))))
-          ] 
-          (prn "pitch" pitch)
-        (when (= 
-                (:top (dommy/bounding-client-rect item))
-                (:top (dommy/bounding-client-rect next-syl)))
-        (dommy/set-style! par :background-color "red" )
-       (prn "parent class" (dommy/class par))
-       ;;(prn (dorun  (map dommy/class children)))
-       ;; (prn (map dommy/class (dommy/children par)))
-       ;; (prn "note" note)
 
-        (prn "bounding-rect" bounding-rect)
-        (prn "idx item syl ends-word extra next-syl width" idx item syl ends-word extra next-syl width)
-        (prn (get items 0))))))
-      items))
-   
+;;;;  add-right-margin-to-notes-with-pitch-signs = function(context) {
+;;;;    if (context == null) {
+;;;;      context = null;
+;;;;    }
+;;;;    return $('span.note_wrapper *.pitch_sign', context).each(function(index) {
+;;;;      var current_margin_right, parent;
+;;;;      parent = $(this).parent();
+;;;;      current_margin_right = parseInt($(parent).css('margin-right').replace('px', ''));
+;;;;      return $(parent).css('margin-right', $(this).width());
+;;;;    });
+;;;;  };
+
+
+(defn add-right-margin-to-notes-with-pitch-signs[context] 
+  (let [items (sel "span.note_wrapper *.pitch_sign")
+        ]
+    (dorun (map (fn[item]
+               (let
+                 [parent (dommy/parent item)]
+               (dommy/set-style! (dommy/parent item) 
+                                 :margin-right
+                                 (str (dommy/px item :width) "px")
+                                 )
+                 )) items))))
+
+
+(defn add-left-margin-to-notes-with-left-superscripts[]
+  ;; TODO: Raise height of ornament if it is over a barline!!!
+  (let [items (sel "span.note_wrapper *.ornament.placement_before")
+        ]
+    (dorun (map
+             (fn[item]
+               (let
+                 [parent (dommy/parent item)]
+               (dommy/set-style! item 
+                                 :margin-left
+                                 (str (* -1 
+                                         (dommy/px item :width)) "px"))
+               (dommy/set-style! parent 
+                                 :margin-left
+                                 (str (*  
+                                         (dommy/px item :width)) "px"))
+               )) items))
   ))
 
-;;;;    (for [item 
-;;;;      (fn[x item]
-;;;;        (let [
-;;;;           syl (dommy/text item)
-;;;;           ends-word (= (last syl) "-")
-;;;;           extra (if ends-word 5 0) 
-;;;;           ]
-;;;;      (.log js/console "syl" syl)
-;;;;      (.log js/console "ends-word" ends-word)
-;;;;      (.log js/console "item" item)
-;;;;      (dommy/set-text! item "john")))
-;;;;  (into [] (sel :.syl))))
+(defn add-right-margin-to-notes-with-right-superscripts[]
+  ;; Not sure why it adjusts note_wrapper and not pitch??
+  (log "add-right-margin-to-notes-with-right-superscripts")
+  (let [items (sel "span.note_wrapper *.ornament.placement_after") ]
+    (dorun (map
+             (fn[item]
+               (let [parent (dommy/parent item)
+                     width (dommy/px item :width)
+                     ]            
+                 (dommy/set-style! (dommy/parent item)
+                                   :margin-right
+                                   (str width "px"))
+                 )) items))
+    ))
+
+;;;;        return $('span.note-wrapper *.ornament.placement-after', context).each(function(index) {
+;;;;          var current-margin-right, parent;
+;;;;          parent = $(this).parent();
+;;;;          current-margin-right = parseInt($(parent).css('margin-right').replace('px', ''));
+;;;;          return $(parent).css('margin-right', $(this).width());
+;;;;        });
+;;;;      };
 
 
-;;;;      (for [item (sel :.syl)]
-;;;;        (let
-;;;;        [syl (dommy/text item)]
-;;;;          (.log js/console "syl is " syl)
-;;;;          (dommy/set-style! item { :background-color "red" }
-;;;;                            ))
-;;;;     ))
 
+(defn expand-note-widths-to-accomodate-syllables[context]
+  (let [ items  (sel :.syl)]
+    (dorun (map-indexed 
+             (fn[idx item]
+               (when-not (= idx (dec (count items))) ;; omit last syllable on line
+                 (let
+                   [
+                    syl (dommy/text item)  ;; Move to react component css. hyphen
+                    ends-word (not= (last syl) "-")
+                    extra (if ends-word 5 0)
+                    next-item (get items (inc idx)) 
+                    pitch (some (fn[x] (when (not= -1 (.indexOf (dommy/class x) "pitch")) x))
+                                (-> item dommy/parent dommy/children array-seq) )
+                    rect1 (dommy/bounding-client-rect item)
+                    rect2 (dommy/bounding-client-rect next-item)
+                    ] 
+                   (when false  (prn "pitch" pitch) (prn "next-item" next-item) (prn "rect1" rect1) (prn "rect2" rect2))
+                   (when 
+                     (and (= (:top rect1) (:top rect2))
+                          (> (+ extra (:right rect1))
+                             (:left rect2)))
+                     ;;($note.css("margin-right", "" + (existing_margin_right     + syl_right - next_left + extra + extra2) + "px"));
+                     (dommy/set-style! pitch :margin-right 
+                                       (str (+ extra
+                                               (- (:right rect1)
+                                                  (:left rect2)
+                                                  )) "px")) 
+                     ))))
+             items
+             ))))
 
+(defn dom-fixes[this]
+  (expand-note-widths-to-accomodate-syllables this)
+  (add-right-margin-to-notes-with-right-superscripts)
+  (add-left-margin-to-notes-with-left-superscripts)
+  (add-right-margin-to-notes-with-pitch-signs this)
+  )
 (def composition-wrapper 
   (with-meta composition
              {:component-did-mount
               (fn[this]
                 (.log js/console "component-did-mount composition to call dom_fixes")
-              ;;  (js/dom_fixes (js/$ (reagent/dom-node this)))
-                (expand-note-widths-to-accomodate-syllables (reagent/dom-node this))
+                (dom-fixes this)
+                ;;  (js/dom_fixes (js/$ (reagent/dom-node this)))
+
                 )
 
               :component-did-update
               (fn[this]
                 (.log js/console "component-did-update composition-about to call dom_fixes")
-                (js/dom_fixes (js/$ (reagent/dom-node this)))
-                (expand-note-widths-to-accomodate-syllables (reagent/dom-node this))
+                (dom-fixes this)
                 ) 
               }
              ))
@@ -826,7 +867,8 @@
          :begin-slur-id 4
          :slur 5
          :pitch-name 6
-         :pitch-alteration 7}
+         :pitch 7
+         :pitch-alteration 8}
         item1
         (into[] (cons [:pitch-name (first deconstructed-pitch)]
                       (rest (rest item))))
@@ -839,7 +881,7 @@
 
         alteration-string (second deconstructed-pitch)
         my-pitch-alteration (when alteration-string
-                              ["pitch-alteration" alteration-string])
+                              [:pitch-alteration alteration-string])
 
         item4 
         (remove nil? (into[] (cons my-pitch-alteration item3)))
@@ -1287,8 +1329,8 @@
   (reagent/render-component 
     [calling-component]
     (.getElementById js/document "container"))
-     (.log js/console "starting timer")
-     (start-parse-timer)
+  (.log js/console "starting timer")
+  (start-parse-timer)
   )
 
 

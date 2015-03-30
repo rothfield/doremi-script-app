@@ -6,7 +6,7 @@ goog.require('adzerk.boot_reload.client');
 goog.require('adzerk.boot_reload.client');
 if(adzerk.boot_reload.client.alive_QMARK_.call(null))
 {} else
-{adzerk.boot_reload.client.connect.call(null,"ws://localhost:57955",new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"on-jsload","on-jsload",-395756602),(function (){return doremi_script_app.app.init.call(null);
+{adzerk.boot_reload.client.connect.call(null,"ws://localhost:51407",new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"on-jsload","on-jsload",-395756602),(function (){return doremi_script_app.app.init.call(null);
 })], null));
 }
 
