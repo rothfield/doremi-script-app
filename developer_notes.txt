@@ -4,6 +4,7 @@ boot dev
 
 # compile for production. Production code is in target
 boot css-min cljs -O advanced
+boot cljs -O advanced
 
 # Use node's http-server to test the production code
 # install

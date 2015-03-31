@@ -349,6 +349,7 @@
   "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
   )
 
+
 (defn entry-area []
   ;; see https://github.com/jonase/reagent-tutorial
   (let [
@@ -356,9 +357,6 @@
         last-val @last-text-value
         my-val (reagent/atom last-val)
         ]
-    (fn []
-      [:div.form-group
-       [:label {:for "entryArea"} "Enter Letter Notation:"]
        [:textarea#the_area.entryArea.form-control
         {
          :placeholder text-area-placeholder
@@ -366,10 +364,26 @@
          :value @my-val
          :spellCheck false
          :on-change (fn[x]
+                      (prn "on-change")
                       (reset! my-val (-> x .-target .-value))
                       (reset! last-text-value @my-val)
                       )
-         }]])))
+
+         }]))
+
+(defn entry-area-wrapper[]
+  (with-meta entry-area
+             {:component-did-mount 
+              #( (.log js/console "component-did-mount entry-area")
+                                     (prn "about to focus")
+                                     (.focus (reagent/dom-node %))
+                                     )}))
+
+
+(defn entry-area-box[]
+  [:div.form-group
+   [:label {:for "entryArea"} "Enter Letter Notation:"]
+   [entry-area-wrapper]])
 
 
 
@@ -573,8 +587,8 @@
                  ))) items))))
 
 (defn fallback-if-utf8-characters-not-supported[context]
-   ;;; TODO
-)
+  ;;; TODO
+  )
 ;;;;      var tag, width1, width2;
 ;;;;      if (context == null) {
 ;;;;        context = null;
@@ -629,7 +643,7 @@
 
 (defn dom-fixes[this]
   ;;; TODO: review if this is necessary
-		;;; $('.sargam_line .note',context).removeAttr("style");  
+  ;;; $('.sargam_line .note',context).removeAttr("style");  
   ;;;  new code 2015
   ;;;
   (expand-note-widths-to-accomodate-syllables this)
@@ -1242,7 +1256,6 @@
    [:select#selectNotation.selectNotation.form-control
     {:value (get @app-state :composition-kind)
      :on-change 
-
      #(let
         [kind-str (-> % .-target .-value)
          my-kind (if (= "" kind-str)
@@ -1370,7 +1383,7 @@
 (defn doremi-box[]
   [:div.doremiBox
    [controls]
-   [entry-area {:doremi-text (get @app-state :doremi-text)}]
+   [entry-area-box]
    [composition-wrapper {:parsed (get-in @app-state [:parse-results,:parsed])
                          :render-as (get @app-state :render-as) 
                          } ]
@@ -1383,6 +1396,7 @@
 (defn calling-component []
   [doremi-box])
 
+(def generate-initial-page true)
 
 (defn init []
   (reagent/render-component 
@@ -1393,6 +1407,11 @@
   )
 
 
+(when false ;;;generate-initial-page
+  (prn 
+    (reagent/render-component-to-string 
+      [calling-component]
+      (.getElementById js/document "container"))))
 
 
 
