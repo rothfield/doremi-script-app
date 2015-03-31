@@ -1,0 +1,5 @@
+										<script>
+												function setfocus() {
+														document.getElementById("the_area").focus();
+												}
+												setfocus();
