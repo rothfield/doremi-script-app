@@ -360,6 +360,7 @@
     (fn[]
        [:textarea#the_area.entryArea.form-control
         {
+         :autofocus true
          :placeholder text-area-placeholder
          :name "src",
          :value @my-val
@@ -1406,7 +1407,7 @@
     [calling-component]
     (.getElementById js/document "container"))
   (.log js/console "starting timer")
-   ;; (.focus (.getElementById js/document "the_area"))
+  (.focus (.getElementById js/document "the_area"))
   (start-parse-timer)
   )
 
