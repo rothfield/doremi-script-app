@@ -357,6 +357,7 @@
         last-val @last-text-value
         my-val (reagent/atom last-val)
         ]
+    (fn[]
        [:textarea#the_area.entryArea.form-control
         {
          :placeholder text-area-placeholder
@@ -369,21 +370,23 @@
                       (reset! last-text-value @my-val)
                       )
 
-         }]))
+         }])))
 
 (defn entry-area-wrapper[]
   (with-meta entry-area
              {:component-did-mount 
-              #( (.log js/console "component-did-mount entry-area")
-                                     (prn "about to focus")
-                                     (.focus (reagent/dom-node %))
-                                     )}))
+             #(.focus (reagent/dom-node %))
+             }))
+           ;;   #( (.log js/console "component-did-mount entry-area")
+            ;;                         (prn "about to focus")
+             ;;                        (.focus (reagent/dom-node %))
+              ;;                       )}))
 
 
 (defn entry-area-box[]
   [:div.form-group
    [:label {:for "entryArea"} "Enter Letter Notation:"]
-   [entry-area-wrapper]])
+   [entry-area]])
 
 
 
@@ -1403,6 +1406,7 @@
     [calling-component]
     (.getElementById js/document "container"))
   (.log js/console "starting timer")
+   ;; (.focus (.getElementById js/document "the_area"))
   (start-parse-timer)
   )
 
