@@ -614,7 +614,7 @@
 
   ))
 (defn start-parse-timer[]
-  (js/setInterval parse 10000))
+  (js/setInterval parse 3000))
 
 
 ;;;;  add-right-margin-to-notes-with-pitch-signs = function(context) {
