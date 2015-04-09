@@ -71,11 +71,11 @@
     ))
 
 
-(defn ^:private parse[x kind]
-  (log "parse: kind is" kind) 
+(defn parse[x kind]
+  (prn "doremi_core/parse: kind is" kind) 
   (if kind
-    (insta/parse @parser x :start kind)
-    (insta/parse @parser x)
+    (insta/parse @parser x :total true :start kind)
+    (insta/parse @parser x :total true)
     ))
 
 (defn ^:private parse-for-testing[x]
@@ -1881,7 +1881,7 @@
 
           (or (vector? %)
               (insta/failure?  %) true)] }
-
+ (prn "****doremi-text->parse-tree")
   (cond (= "" txt)
         "Nothing entered"
         (not= -1 (.indexOf txt "\t"))
@@ -1889,6 +1889,7 @@
         true
         (let [ parsed (parse txt kind)
               ]
+          (prn "doremi-text->parse-tree: parsed txt,kind,parsed" txt kind parsed)
           (if (insta/failure? parsed)
             parsed
             ;; else

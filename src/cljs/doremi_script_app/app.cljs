@@ -11,16 +11,69 @@
     [goog.Uri :as guri] 
     [goog.net.XhrIo :as xhr]
     [goog.json :as gjson]
-    [clojure.string :as string :refer [join]]
+    [clojure.set]
+    [clojure.string :as string :refer [lower-case upper-case join]]
     [dommy.core :as dommy :refer-macros [sel sel1]]
     ;;  [cljs.core.async :refer [<! chan close!]]
-    [reagent.core :as reagent :refer [atom]]
+    [reagent.core :as reagent :refer [dom-node atom]]
     [instaparse.core :as insta] 
     ))
 
+(def mode->notes-used
+  {
+   :major "SRGmPDN"
+   :ionian "SRGmPDN"
+   :dorian "SRgmPDn"
+   :phyrgian "SrgmPdn"
+   :lydian "SRGMPDN"
+   :mixolydian "SRGmPDn"
+   :aeolian "SRgmPdn"
+   :minor "SRgmPdn"
+   :locrian "SrgmPdn"
+  }) 
+
+(enable-console-print!)
 ;; TODO:  | S - - - |||  three barlines crashes the parser
 ;;
 ;;(log "(-> | S-  doremi-text->parsed))" (-> "| S- " doremi-text->parsed))
+
+(defonce key-map (atom {}))
+
+(def lower-sargam? #{"s" "r" "g" "m" "p" "d" "n"})
+(def upper-sargam? #{"S" "R" "G" "M" "P" "D" "N"})
+
+(defn remove-if-both-cases[my-set ch]
+  ;;(my-log2 "remove-if-both-cases, " my-set ch)
+  (let [lower-ch (lower-case ch)
+   upper-ch (upper-case ch)]
+   (if (and (get my-set lower-ch)
+            (get my-set upper-ch)
+            )
+     (clojure.set/difference my-set #{ lower-ch upper-ch })
+     my-set
+  )))
+
+(my-log2 "remove-if-both-cases test:" 
+     (remove-if-both-cases #{"N" "n" "S"} "n"))
+
+(defn update-key-map![sargam-set]
+  (my-log2 "entering update-key-map! sargam-set is" sargam-set)
+  (reset! key-map
+  (reduce (fn[accum item] 
+           (if (upper-sargam? item)
+             (assoc (assoc accum item (lower-case item))
+                    (lower-case item) item)
+             ;; else
+             accum
+          )) 
+            {"s" "S" "p" "P"}  sargam-set)
+          ))
+
+  (comment
+    (update-key-map! #{"S" "R" "G" "m" "P" "D" "N"})
+  (comment "test:  @key-map is" @key-map)
+    )
+
 
 (defonce last-text-value (atom ""))
 
@@ -29,6 +82,7 @@
     {:composition-kind :sargam-composition
      :render-as :sargam-composition
      :staff-notation-path nil 
+     :parse-results nil
      }))
 
 
@@ -349,70 +403,102 @@
   "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
   )
 
+(defn get-selection[dom-node]
+  {:start (.-selectionStart dom-node)
+   :end (.-selectionEnd dom-node)
+   })
 
-(defn entry-area []
-  ;; see https://github.com/jonase/reagent-tutorial
-  (let [
-        _ (.log js/console "initing entry-area,last-text-value=" @last-text-value)
-        last-val @last-text-value
-        my-val (reagent/atom last-val)
+(defn my-contains?[x y]
+  (not= -1 (.indexOf x y))
+  )
+
+(defn within-sargam-line?[txt idx]
+  (comment "within-sargam-line?, txt,idx,class(text)" txt idx )
+  (let [ left (.substring txt 0 idx) 
+        right (.substring txt idx)
+        x (.indexOf right "\n")
+        index-of-right-newline (if (not= -1 x)
+                                 (+ idx x)
+                                 (.-length txt)
+                                 )
+        y (.lastIndexOf left "\n")
+        index-of-left-newline (if (not= -1 y)
+                                (inc y)
+                                0) 
+        _ (comment "index-of-left-newline=" index-of-left-newline)
+        line (.substring txt index-of-left-newline 
+                         index-of-right-newline)
+        _ (comment "line is" line)
         ]
-    (fn[]
-       [:textarea#the_area.entryArea.form-control
-        {
-         :autofocus true
-         :placeholder text-area-placeholder
-         :name "src",
-         :value @my-val
-         :spellCheck false
-         :on-change (fn[x]
-                      (prn "on-change")
-                      (reset! my-val (-> x .-target .-value))
-                      (reset! last-text-value @my-val)
-                      )
+    (comment "left right index-of-right-newline" left right index-of-right-newline)
+    (comment "line is" line)
+    (my-contains? line "|")))
 
-         }])))
 
-(defn entry-area-wrapper[]
-  (with-meta entry-area
-             {:component-did-mount 
-             #(.focus (reagent/dom-node %))
-             }))
-           ;;   #( (.log js/console "component-did-mount entry-area")
-            ;;                         (prn "about to focus")
-             ;;                        (.focus (reagent/dom-node %))
-              ;;                       )}))
+(def my-val (atom ""))
+
+(defn on-key-press[evt] 
+  (let [
+        my-key-map @key-map
+        target (.-target evt)
+        key-code (.-keyCode evt)
+        ctrl-key? (or (.-ctrlKey evt)
+                      (.-altKey evt)
+                      (.-metaKey evt))
+        from-char-code-fn (.-fromCharCode js/String)
+        ch (from-char-code-fn key-code)
+       ; _ (.log js/console "evt is" evt) 
+       ; _ (comment "ch is ****" ch)
+       ; _ (comment "my-key-map is" my-key-map)
+        new-char (if-not ctrl-key?  (get my-key-map ch ))
+       ; _ (comment "new-char ****" new-char " *********")
+        caret-pos (.-selectionStart target)
+       ; _ (comment "caret-pos" caret-pos)
+        ;; var caretPos = document.getElementById("txt").selectionStart;
+        text-area-text (.-value target)
+       ; _ (comment "text-area-text=" text-area-text) 
+        selection (get-selection target)
+       ; _ (comment "selection is" selection)
+        my-within-sargam-line (within-sargam-line? text-area-text (:start selection))
+       ; _ (comment "my-within-sargam-line=" my-within-sargam-line)
+        ]
+    ;;; nativeEvent looks like  {which: 189, keyCode: 189, charCode: 0, repeat: false, metaKey: false…}
+    (comment "app-state is" @app-state)
+    ;;  jQuery("#txt").val(textAreaTxt.substring(0, caretPos) + txtToAdd + textAreaTxt.substring(caretPos) );
+    (if (and my-within-sargam-line
+             new-char)
+      (do
+        ;; (.preventDefault evt)
+        (set! (.-value target)
+              (str (.substring text-area-text 0 caret-pos) 
+                   new-char 
+                   (.substring text-area-text caret-pos)))
+        (set! (.-selectionStart target)
+              (inc (:start selection)))
+        (set! (.-selectionEnd target)
+              (inc (:end selection)))
+        false)
+      ;; else
+      true )
+    ))
+
+(def stored-selection (reagent/atom nil))
+;;{:start nil :end nil})
+
 
 
 (defn entry-area-box[]
   [:div.form-group
    [:label {:for "entryArea"} "Enter Letter Notation:"]
-   [entry-area]])
-
-
-
-
-(defn zentry-area [{doremi-text :doremi-text }]
-  [:div.form-group
-   [:label {:for "entryArea"} "Enter Letter Notation:"]
    [:textarea#the_area.entryArea.form-control
     {
-     :placeholder
-     "Enter letter music notation using 1234567,CDEFGABC, DoReMi (using drmfslt or DRMFSLT), SRGmPDN, or devanagri: सर ग़म म'प धऩ   Example:  | 1 -2 3- -1 | 3 1 3 - |   ",
+     :autofocus true
+     :placeholder text-area-placeholder
      :name "src",
-     :value doremi-text
      :spellCheck false
-     :on-change 
-     (fn[x] 
-       (let [new-val
-             (-> x .-target .-value)
-             ]
-         (swap! app-state assoc-in
-                [:doremi-text]
-                new-val)
-         ) 
-       )
-     }]])
+     } 
+    ]])
+
 
 (defn draw-children[items]
   (doall (map-indexed
@@ -477,19 +563,58 @@
           [ ;;_ (log "should parse")
            my-parse-results (doremi-text->collapsed-parse-tree 
                               current kind)
+           _ (comment "my-parse-results" my-parse-results)
+           ;;notes-used (get-in my-parse-results [:attributes :notesused])
+           attributes (get my-parse-results :attributes {})
+           _ (comment "attributes=")
+          _ (comment attributes)
+           my-mode (-> (get attributes :mode "unknown")
+                       lower-case 
+                       keyword)
+           _ (comment "my-mode" my-mode)
+           mode-notes-used (set 
+                             (get mode->notes-used  my-mode ""))
+           _ (comment "mode-notes-used" mode-notes-used)
+           notes-used1 (-> (get attributes :notesused "")
+                          set
+                          )
+           notes-used2 (cond 
+                         (not (empty? notes-used1))
+                         notes-used1
+                         mode-notes-used
+                         mode-notes-used
+                         :else 
+                         "SP")
+           _ (comment "notes-used2" notes-used2)
+           notes-used
+           (set (reduce (fn[accum item] (remove-if-both-cases accum item))
+                   notes-used2
+                   "rgmdn"))
+           _ (comment "app/parse: notes-used=" notes-used)
            ]
+          (comment 
+            "my-parse-results" {:src "NotesUsed: SRGmPDnN\n\nS---- -\n", :parsed [:composition [:attribute-section "NotesUsed" "SRGmPDnN" "kind" :sargam-composition] [:stave [:notes-line [:measure [:beat [:pitch "C" [:octave 0]] [:dash] [:dash] [:dash] [:dash]] [:beat [:dash]]]]]], :attributes {:notesused "SRGmPDnN", :kind :sargam-composition}, :error nil})
+
           ; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
 
 
-          (log "****in parse, parse-results are" my-parse-results)
-          (log "in parse, app-state=" @app-state)
+          (my-log2 "****in parse, parse-results are")
+         (my-log2  my-parse-results)
+          (my-log2 "in parse, app-state=")
+         (my-log2 @app-state)
+          (update-key-map!  notes-used)
           (swap! app-state assoc-in [:parse-results] my-parse-results)
           (swap! app-state assoc-in [:last-text-parsed] current)
           )
         ))))
 
+(defn zzextract-notes-used[s]
+  ;; s is like "SrgMPDn"
+  (let [notes-used nil]
+
+  ))
 (defn start-parse-timer[]
-  (js/setInterval parse 2000))
+  (js/setInterval parse 10000))
 
 
 ;;;;  add-right-margin-to-notes-with-pitch-signs = function(context) {
@@ -630,7 +755,7 @@
                     rect1 (dommy/bounding-client-rect item)
                     rect2 (dommy/bounding-client-rect next-item)
                     ] 
-                   (when false  (prn "pitch" pitch) (prn "next-item" next-item) (prn "rect1" rect1) (prn "rect2" rect2))
+                   (when false  (comment "pitch" pitch) (comment "next-item" next-item) (comment "rect1" rect1) (comment "rect2" rect2))
                    (when 
                      (and (= (:top rect1) (:top rect2))
                           (> (+ extra (:right rect1))
@@ -1318,7 +1443,7 @@
       (.preventDefault e)
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
-        {:src @last-text-value
+        {:src (.-value (sel1 :#the_area))
          :kind (get-in @app-state [:composition-kind])
          })
       )
@@ -1403,20 +1528,28 @@
 (def generate-initial-page true)
 
 (defn init []
+  (let [old-val (.-value (.getElementById js/document "the_area"))]
   (reagent/render-component 
     [calling-component]
     (.getElementById js/document "container"))
   (.log js/console "starting timer")
   (.focus (.getElementById js/document "the_area"))
+  (set! (.-onkeypress (.getElementById js/document "the_area"))
+        on-key-press
+        )
+  (if old-val
+     (set! (.-value (sel1 :#the_area)) old-val))
   (start-parse-timer)
-  )
+  ))
 
 
 (when false ;;;generate-initial-page
-  (prn 
-    (reagent/render-component-to-string 
-      [calling-component]
-      (.getElementById js/document "container"))))
+  (comment 
+    (comment 
+      (reagent/render-component-to-string 
+        [calling-component]
+        (.getElementById js/document "container"))))
+  )
 
 
 

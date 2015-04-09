@@ -1,15 +1,19 @@
 (set-env!
  :source-paths    #{"src/cljs"}
+ :src-paths    #{"src/cljs"}
  :resource-paths  #{"resources"}
- :dependencies '[[adzerk/boot-cljs      "0.0-2814-0" :scope "test"]
- [adzerk/boot-cljs-repl "0.1.9"      :scope "test"]
+ :dependencies '[
+ [adzerk/boot-cljs  "0.0-2814-0" :scope "test"]
+ [adzerk/boot-cljs-repl "0.1.10-SNAPSHOT"]
  [adzerk/boot-reload    "0.2.4"      :scope "test"]
  [pandeiro/boot-http    "0.6.1"      :scope "test"]
+ [org.clojure/data.csv "0.1.2"]
  [org.clojure/clojure "1.6.0"]
  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
  [com.lucasbradstreet/instaparse-cljs "1.3.5"]
+;; [org.clojure/clojurescript "0.0-3126"]
  [prismatic/dommy "1.0.0"]
- [reagent "0.5.0-alpha3"]])
+ [reagent "0.5.0"]])
 
 (require
  '[boot.pod :as pod]

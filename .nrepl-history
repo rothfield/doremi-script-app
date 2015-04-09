@@ -3,3 +3,25 @@
 (def item ["ornament",["ornament-pitch","B"]])
 (nth item 2)
 (get {1 2} 1)
+(def z "hi|john")
+(- 3 2)
+1
+(.log js/console "hi")
+
+(first "hi")
+(into #{} "SRG")
+(get-in {1 2 3 {1 2})
+(get-in [3 1] {1 2 3 {1 2}})
+(get 1 {2 3})
+(get {2 3} 2)
+(into set "SrR")
+
+(set "SrR")
+(get #{1 2} 1)
+exit
+(clojure.set/set "SSS")
+(set "SSS")
+(get {1 2} 1)
+(get {:a 1 :b 2} :a)
+(set "")
+(empty? #{})

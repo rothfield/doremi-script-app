@@ -1,0 +1,83 @@
+Number,Name,That,Ascending,Descending,Pakr,Vadi,Samvadi,Time,Remarks
+1,Aabhogi,Kafi,"S R g m D S.","S. n D m g R S","D S R g m R S",S,m,morning,
+2,"Abhogi Kanhra",Kafi,"S R g m D S.","S. D m g R S, .D S","mgRS, .DSRg, mDmg, RS,",S,m,"10 am to 1 pm",
+3,Adana,Asavari,"S R m P, d N S.","S. d n P m P, g m R S","S. d N S. , d , n PmP, g m R S",S.,P,"1 to 4 am",
+4,"Ahir Bhairav",Bhairav,"S r G m, P D n S.","S. n D P, m G r S","G m r S, .D .N r S",m,S,morning,
+5,"Alahiya Bilaval",Bilaval,"SR GmGR, GP,D N S.","S. NDP, DnDP, mG mRS","G R GP,mGmR, GPDnDP",D,G,morning,remove
+6,Asavari,Asavari,"S R m P d S.","S. n d P m g R S","R m P, n d P, d m P, g R S",D,G,"10 am to 1 pm",
+7,Bageshri,Kafi,"S g m D n S.","S. n D m g R S","S .n .D S, m g, m D n D, mg, m g R S",m,S,"10 am to 1 pm",
+8,Bahar,Kafi,". n S, g m P, g m, n D N S .","S . n D n P, m P g m R S","m P g m D N S .",m,S,"10 am to 1 pm",
+9,Basant,Poorvi,"S G ZZ d r . S","r . N d P, ZZ G, ZZ d ZZ G , r S","ZZ d r . S . , r . N d P, ZZ G ZZ G","S .",P,"4 to 7 am",
+10,Bhairav,Bhairav,"S r G m P d N S .","S . N d P mG r S","Dm r , GmP, mG, r S",D,R,"7 to 10 am",
+11,Bhairavi,Bhairavi,"S r g m P d n S .","S . n d P m g r S","S g m P, d -- p",m,S,morning,
+12,Bhimpalasi,Kafi,". n S g m P n S .","S . n D P m g R S",". n S m, m P g, m g R S",m,S,"10 am to 1 pm",
+13,Bhupali,Kalyan,"S R G P D S .","S . D P G R S","GRS . D, SRG, PG, DPG, R S",G,D,"7 to 10 pm",
+14,Bihag,Bilaval,". N S G m P N S .","S . N D P m G R S",". NS, GmP, GmG, RS",G,N,"7 to 10 pm",
+15,Bihagra,Bilaval,". N S G, G m P D n D P, N S .","S . N D, n D P, G m G R S","GmPDnDP, GmGRS",m,S,"10 pm to 1 am","Some use ZZ also"
+16,"Bilaskhani Todi",Bhairavi,"S r g, m G, P d, n d, S .","S . r . n d P, m g r g r S",". d S r g, mg, r g, r S",d,g,"10 am to 1 pm",
+17,Bilaval,Bilaval,"S R G m P D S .","S . N D P m G RS","G R GP, DNS .",D,G,morning,.
+18,Chandrakauns,,". N S g m d N S .","S . N d m g m g S","g m N d m g m g . N S",m,S,"mid night",
+19,Chayanat,Kalyan,"S, RGmP, DP, ND, S .","S . NDP, ZZ PDP, RGmP, GmRS","P--R, RGmP, mG mR, S",R,P,"7 to 10 pm",
+20,"Darbari Kanhdra",Asavari,". n S R g R S, m P d n R . S .","S . d n P, m P, g m R S","g m R S, . d . n S R S",R,P,"10 am to 1 pm",
+21,Des,Kamaj,"S R m P N S .","S . n D P m G R G S","RmP, nDP, DmGR, G . NS",P,R,"7 to 10 pm","Some consider R vadi and P samvadi"
+22,Deshkar,Bilaval,"S R G P D, S .","S . D P, G R S","D D P, G P D P, G R S",D,G,"7 to 10 am",
+23,Desi,Asavari,"R g R S R . n S, R m P n S .","S . P -, D m P R g S R . n S","RgRSR . nS, RmPDmPgRgRSR . nS",P,R,"10 am to 1 pm",
+24,Dhanashri,Kafi,". n S, g m P, n S .","S . n D P, m P g, m g R S",". n S, GmP, g , mgRS",P,S,"1 to 4 pm",
+25,Durga,Bilaval,"S R m P D S .","S . D P m R S","DmR, mPDmR, . DS",m,S,"10 am to 1 pm",
+26,"Gaur malhar",Kafi,"R G R m, G R S, m R P m P, D S .","S . n D n P, D G P m, R G R m G R S","RGRm, GRS, Pm, PD, S . , D P m",m,S,"1 to 4 pm","Some consider thaat Bilaval"
+27,"Gaur Sarang",Kalyan,"S, GR, ZZ G, PZZ , DP, ND, S .","S . DNP, DZZ PG, mR, PR, S","S, GRmG, PRS",G,D,"7 to 10 am",
+28,"Gurjari Todi",Todi,"S r g ZZ d N S .","S . n d ZZ g r, g r S",". d . n S r g, r S, ZZ g r g r S",d,r,"10 am to 1 pm",
+29,Hamir,Kalyan,"S R S , G m D, N D S .","S . N D P, ZZ P D P, G m R S","S R S, G m D",D,G,"7 to 10 pm",
+30,Hansadhvani,Bilaval,"S G R, G P, N S .","S . N P, G P G R, S","SGRS, . N . P, GR, GPGR, S",S,P,"7 to 10 pm","Some consider G - Vadi and N- Samvadi"
+31,Hindol,Kalyan,"S G, ZZ D N D, S .","S . , N D , ZZ G , S","SG, ZZDND, ZZGS",D,G,"7 to 10 am","N is used less to avoid Sohni"
+32,"Jai Jai Vanti",Kamaj,"S, R g R S, . n . D . P, R, GmP, NS .","S . n D P, G m, R g R S","R g RS, . n . D . P, R, Gm, R g R S",R,P,"10 am to 1 pm",
+33,Jaunpuri,Asavari,"S Rm P d n S .","S . n d P, m g R S","RmP, n d P, d m P, gRS",d,g,"10 am to 1 pm",
+34,Jhinjhoti,Khamaj,"S R G m P D n S .","S . n D P m G R S",". DS, Rm, G, PmGR, S . n . D . P",G,n,"10 am to 1 pm","10 am to 1 pm"
+35,Jogiya,Bhairav,"S r m P d S .","S . N d P m r S","m, r S, S r r m r S",m,S,morning,
+36,Kafi,Kafi,"S R g m P D n S .","S . n D P m g R S","SS RR gg mm P",P,R,"1 to 3 pm",.
+37,Kalavati,Khamaj,"S G m P D n S .","S . n D P m G R S","G m P D n D, m P D mG",P,S,"10 pm to 1 am",.
+38,Kamod,Kalyan,"S, RP, ZZ PDP, NDS .","S . NDP, ZZ PDP, GmP, Gm, RS","RP, ZZ PDP, GmP,GmRS",P,S,"7 to 10 pm",
+39,"Kausi Kanhda",Asavari,"S R g m P D n S .","S . n D P m g R S",,m,S,"10 pm to 1 am","Bageshri Ang"
+40,Kedar,Kalyan,"S m, m P, D P, N D S .","S . NDP, ZZ PDPm, PmRS","S m, m P, D P m, P m R S",S,m,"7 to 10 pm",.
+41,Khamaj,Khamaj,"S G m P D N S .","S . n D P m G R S","G m P D n D, m P D,mG",G,N,"10 pm to 1 am",
+42,Lalit,marva,". N r G m, ZZ m G, ZZ D S .","R . N D, ZZ D ZZ m G, R S",". NRGm, DZZ, mG, ZZGRS",m,S,"4 to 7 am",
+43,madhuvanti,Todi,". N S g ZZ P N S .","S . N D P ZZ g R S",". NSGZZP, ZZGRS",P,S,"4 to 7 pm",
+44,"madhyamad Sarang",Kafi,". n S R m P n S .","S . n P , m R S",". nSR, RmRPR, nP, mRS",R,P,"7 to 10 am",
+45,malgunji,Kafi,". D . N S R G m, G m, D N S .","S . N D P m G, m g R S","GmgRS, . D . nSRGm",S,m,night,
+46,malkauns,Bharavi,". n S g m d n S .","S . n d m g m g S","m g, m d n d, m g, m g, S",m,S,"1 to 4 am",
+47,"maluha Kedar",Bilaval,". N R S, G m P, D P m, m P N S .","S . N D P, G m P G m R S",". NSGmP, GmRS, . D . P . m . P . NS",m,S,"10 pm to 1 am",
+48,mand,Bilaval,"S G R m G, P m D P, N D S .","S . D N P, D m P G m S","S, RG, S, R, mmP, D, PDS .",S,P,"all time",
+49,"maru Bihag",Kalyan,". N S G m P N S .","S . N D P, ZZ G ZZ G R S","ZZ G, RS, RS, SmGP, ZZ G ZZ G RS",G,N,"10 pm to 1 am",
+50,marva,marva,". N r G ZZ D N S .","S . N D ZZ G r S","D, ZZ G r, G ZZ G r S",D,R,evening,"It is a Sandhi Prakash Raga"
+51,"miya Ki Sarang",Kafi,"S R m R, m P n D N S .","S . n D n P, m P, m R m R, S . N S","SRS, . nD . nP, . m . P . n . D . NS, R, mR, PmR . NS",R,P,"10 am to 1 pm",
+52,"miya malhar",Kafi,"R m R S, m R P, m P n D, N S .","S . n D, n m P, g m R S","RmR S . n . p, . m . P . n . D . N S, P g m R S",m,S,"10 pm to 1 am",
+53,multani,Todi,". N S g ZZ P N S .","S . N d P ZZ g r S",". N S, ZZ g, P g, r S",P,S,"1 to 4 pm",
+54,"Nand - Anandi",Kalyan,"S G m , P D , N P S .","S . D, N P, D ZZ P, G m D P R S","GmDP, RSGm",S,P,"10 pm to 1 am",
+55,Pahadi,Bilaval,"S R G P D S .","S . D P , G P, G R S","G, RS, . D, . P . DS",S,P,"all time",
+56,Paraj,Poorvi,". N S G, ZZ d N S .","S . N d P, ZZ P d P, G m G, ZZ G r S","S . , N d P, ZZ P d P, G m G","S .",P,"4 to 7 am",
+57,Patdeep,Kafi,"S g m P N S .","S . N D P m g R S","D P, g, m P N S .",P,S,"1 to 4 pm (towards 4 pm)","It's N is little sharper"
+58,Piloo,Kafi,". N S G m P N S .","S . n D P n d P d P m g S . N S",". P . N S R g S, G m P g S, . N S",G,N,"1 to 4 pm","All 12 notes are used in this raga"
+59,Pooriya,marva,". N r S, G, ZZ D, N r . S .","S . N D ZZ G r S","G, . N r S, . N . D . N . ZZ . D, r S",G,ZZ,evening,"It is a Sandhi Prakash Raga"
+60,"Pooriya Dhanashri",Poorvi,". N r G ZZ P, D P, N S .","S . N d P, ZZ G ZZ r G, r S",". N r G, ZZ P, DP, ZZ G, ZZ r G, r S",P,r,evening,"It is a Sandhi Prakash Raga"
+61,Poorvi,Poorvi,". N r G, ZZ P, d N S .","S . N d P ZZ, GmG, r S",". N, S r G, mG, ZZ G r S",G,N,evening,"It is a Sandhi Prakash Raga"
+62,Rageshwari,Khamaj,"S G m D N S .","S . n D m G R S","GmDN S . n Dm, GmRS, . D . n S G m",m,S,"10 pm to 1 am",
+63,"Ramdasi malhar",Kafi,". N S, R G m, n D n P N S .","S . n D n P, D P m, P g, m P g, m R S","RPmGm, nPgmRS",m,S,"rainy season",
+64,Ramkali,Bhairav,"S r G m P d N S .","S . N d P, ZZ P d n d P, G m r S","d P, ZZPdndP, GZZ, r PmG r S",P,S,morning,
+65,Rasranjani,Bilaval,"S R m D N S .","S . N D m, D m R S",,m,S,midnight,
+66,Saraswati,Khamaj,"S R ZZ P, n D P, n D S .","R . n D P ZZ R m P, ZZ R S",,P,R,midnight,
+67,Shankara,Bilaval,"S G P N S .","S . NP, ND S . NP, GPGS","S . NP, ND S . NP, GPGS",G,N,"10 pm to 1 am",
+68,Shivranjani,Kafi,"S R g P D S .","S . D P g R S",,P,S,midnight,
+69,Shri,Poorvi,"S r r S, r ZZ P N S .","S . Nd P, ZZ P d ZZ G r, P r G r S","S r r S, r ZZ P, d ZZ G r G r S",R,P,evening,"It is a Sandhi Prakash Raga"
+70,"Shuddh Kalyan",Kalyan,"S R G P D S .","S . N D, N D P, ZZ G R, G R P R G R S","GRS, . N . D . N . D . P, S, GR, PR, GRS",G,D,"7 to 10 pm",
+71,"Shuddh Sarang",Kafi,"S R m P, ZZ P N S .","S . N D P ZZ G R S",,R,P,"10 am to 1 pm",
+72,"Shyam Kalyan",Kalyan,". N S R ZZ P N S .","S . N D P ZZ P G m R . N S",". N S R ZZ P, G m R . N S",P,S,"7 to 10 pm",
+73,"Sindhu Bhairavi",Asavari,"S R g m P d n S .","S . n d P m g R S",,m,S,"10 am to 1 pm",
+74,Sohni,marva,"S G ZZ D N S .","S . r . S . N D, G ZZ D, G ZZ G, ZZ G r S","S . N D, G ZZ DNS . r . S .",D,G,"4 to 7 am",
+75,Sughrai,Kafi,". n S R g, m P, N S .","S . D, N P, m P, g , m R S",". n S R g, mP n P, DP, mP g mRS",P,S,"10 am to 1 pm",
+76,"Tilak Kamod",Khamaj,"S R G S, R m P D, m P, S .","S . P D m G, S R G, S . N",". P . NSRG, S, RPmG, S . N",R,P,"10 pm to 1 am",
+77,Tilang,Khamaj,"S G m P N S .","S . n P m G S",". NSGmP, NS . , S . nP, GmGS",G,N,"10 pm to 1 am",
+78,Todi,Todi,"S r g ZZ P d N S .","S . N d P ZZ g r S",". d NS, r , g r, s, ZZg r g r S",d,g,"10 am to 1 pm",
+79,Vibhas,Bhairav,"S r G P d P S .","S . d P G P d P, G r S","d , P , GP, G r S",d,G,morning,
+80,"Vridavani Sarang",Kafi,"S R m P N S .","S . n P m R S",". N S R, mR, PmR, S",P,R,"10 am to 1 pm",
+81,"Yaman Kalyan",Kalyan,"S R G ZZ P D N S .","S . N D P ZZ G RS",". N R G, R S, P ZZ G R S",G,N,"7 to 10 pm",
+82,"Yamani Bilaval",Bilaval,". N R G, m R G P, ZZ P, D N S .","S . N D P, ZZ P m G, R G R S",". N R G, ZZ PmG, RGRS",P,S,morning,
