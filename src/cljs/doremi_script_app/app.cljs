@@ -101,7 +101,7 @@
 ;;(defn ajax-json [formName]  (let [action         (str (get-form-action formName) ".json")        formData     (.toObject (.getFormDataMap goog.dom.forms (dom/$ formName)))        serialized    (goog.json.serialize formData)]        (.send goog.net.XhrIo action callback  'POST' serialized )))
 
 (def generate-staff-notation-URL
-  "http://ragapedia.com:3000/generate_staff_notation")
+  "http://ragapedia.com/generate_staff_notation")
 
 
 
@@ -125,8 +125,7 @@
                       ]
                   (log "in callback my-map" my-map)
                   (swap! app-state assoc :staff-notation-url
-                         (str "http://ragapedia.com:3000" 
-                              (:staffNotationPath my-map)))
+                            (:staffNotationPath my-map))
                   (log "app-state is" @app-state)
                   ))
               "POST"

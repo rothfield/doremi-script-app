@@ -1,0 +1,14 @@
+Note that this app is a pure html app. 
+
+To generate staff notation/midi/ it relies on the doremi-script project, which generate staff notation via lilypond
+
+
+See generate-staff-notation-URL in app.cljs
+Currently this is set to
+
+(def generate-staff-notation-URL
+  "http://ragapedia.com/generate_staff_notation")
+see the nginx.conf on the server.
+
+Note that on the server, the html css, images etc are served by nginx
+

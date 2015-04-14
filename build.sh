@@ -1,5 +1,6 @@
 echo "running boot cljs -O advanced"
 echo "minifying application.css and doremi.css in resources/css. Uses npm minify command"
+echo "To install: sudo npm install -g  minifier"
 cd resources/css
 minify application.css doremi.css
 cd -

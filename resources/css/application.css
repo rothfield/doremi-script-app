@@ -1,4 +1,4 @@
-select.selectNotation ,select.renderAs {
+select.selectNotation.form-control ,select.renderAs.form-control {
   width: 100px;
 }
 
