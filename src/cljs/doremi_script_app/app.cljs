@@ -101,7 +101,7 @@
 ;;(defn ajax-json [formName]  (let [action         (str (get-form-action formName) ".json")        formData     (.toObject (.getFormDataMap goog.dom.forms (dom/$ formName)))        serialized    (goog.json.serialize formData)]        (.send goog.net.XhrIo action callback  'POST' serialized )))
 
 (def generate-staff-notation-URL
-  "http://ragapedia.com/generate_staff_notation")
+  "http://ragapedia.com/run-lilypond-on-doremi-text")
 
 
 
@@ -126,6 +126,12 @@
                   (log "in callback my-map" my-map)
                   (swap! app-state assoc :staff-notation-url
                             (:staffNotationPath my-map))
+                  (swap! app-state assoc :midi-url
+                            (:midi-url my-map))
+                  (swap! app-state assoc :lilypond-url
+                            (:lilypond-url my-map))
+                  (swap! app-state assoc :doremi-text-url
+                            (:doremi-text-url my-map))
                   (log "app-state is" @app-state)
                   ))
               "POST"
@@ -1496,6 +1502,11 @@
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
+   [:a.btn.btn-info 
+    { :href "http://github.com/rothfield/doremi-script#readme",
+            :target "_blank",
+            :title "Opens in new window"}
+       "Help"]
    ]
   )
 (defn parse-failed[]
