@@ -124,8 +124,10 @@
                                  )
                       ]
                   (log "in callback my-map" my-map)
+                  (swap! app-state assoc :mp3-url
+                            (:mp3-url my-map))
                   (swap! app-state assoc :staff-notation-url
-                            (:staffNotationPath my-map))
+                            (:staff-notation-url my-map))
                   (swap! app-state assoc :midi-url
                             (:midi-url my-map))
                   (swap! app-state assoc :lilypond-url
@@ -1147,6 +1149,12 @@
   [:span {:class "measure"} 
    (draw-children (rest item))])
 
+
+(defn tala[{item :item}]
+  (assert (is-a "tala" item))
+  [:span.tala (second item)]
+  )
+
 (defn chord[{item :item}]
   (assert (is-a "chord" item))
   (log "chord- item is")
@@ -1248,6 +1256,8 @@
       [barline {:key idx :item item}]
       (= my-key :lyrics-section)
       [lyrics-section {:key idx :item item}]
+      (= my-key :tala)
+      [tala {:key idx :item item}]
       (= my-key :chord)
       [chord {:key idx :item item}]
       (= my-key :syl)
@@ -1497,6 +1507,13 @@
     "Help"]
    ])
 
+(defn mp3-url[] 
+   [:a.btn.btn-info 
+    { :href (:mp3-url @app-state)
+            :target "_blank",
+            :title "Opens in new window"}
+       "Play mp3"]
+  )
 (defn controls[]
   [:form.form-inline
    [select-notation-box (get @app-state :kind)]
@@ -1507,6 +1524,8 @@
             :target "_blank",
             :title "Opens in new window"}
        "Help"]
+   (if (:mp3-url @app-state)
+   [mp3-url]) 
    ]
   )
 (defn parse-failed[]
