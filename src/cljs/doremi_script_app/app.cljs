@@ -125,7 +125,7 @@
                       ]
                   (log "in callback my-map" my-map)
                   (swap! app-state assoc :staff-notation-url
-                            (:staffNotationPath my-map))
+                            (:staff-notation-url my-map))
                   (swap! app-state assoc :midi-url
                             (:midi-url my-map))
                   (swap! app-state assoc :lilypond-url
