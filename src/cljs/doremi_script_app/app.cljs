@@ -80,7 +80,8 @@
 (defonce app-state
   (atom 
     {:composition-kind :sargam-composition
-     :mp3-url "http://ragapedia.com/compositions/yesterday.mp3"
+     :mp3-url nil
+     ;;"http://ragapedia.com/compositions/yesterday.mp3"
      :render-as :sargam-composition
      :staff-notation-path nil 
      :parse-results nil
@@ -104,24 +105,33 @@
 (def generate-staff-notation-URL
   "http://ragapedia.com/doremi-server/run-lilypond-on-doremi-text")
 
-(defn audio-div[]
-[:div.audio-div
-    [:audio#audio
-         {:preload "auto",
-               :src (:mp3-url @app-state)}]
-    [:button#play {
+(defn simple-audio-controls[]
+  [:div.btn-group.btn-group-sm
+    [:button#play.btn.btn-secondary {
     :on-click (fn[event] 
                 (.load (by-id "audio"))
                 (.play (by-id "audio"))
                (.preventDefault event) )
       }"Play"]
-    [:button#stop 
+    [:button#stop.btn.btn-secondary 
      {
     :on-click (fn[event] 
                 (.pause (by-id "audio"))
                (.preventDefault event) )
      }
-     "Stop"]]
+     "Stop"]
+   ]
+  )
+
+(defn audio-div[]
+;;[:div.audio-div.form-group
+    [:audio#audio
+         {
+          :controls "controls"
+          :preload "auto",
+          :src (:mp3-url @app-state)}]
+;;  [simple-audio-controls]
+ ;;]
 )
 
 (defn generate-staff-notation-xhr [url content]
@@ -1539,7 +1549,8 @@
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
-   [audio-div]
+   (if (:mp3-url @app-state)
+   [audio-div])
    ]
   )
 

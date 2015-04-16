@@ -1,7 +1,9 @@
 select.selectNotation.form-control ,select.renderAs.form-control {
   width: 100px;
 }
-
+.form-inline audio {
+  vertical-align: middle
+}
 div.composition {
   overflow:auto;
   height:175px;

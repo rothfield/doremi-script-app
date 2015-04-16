@@ -11,9 +11,10 @@ CACHE:
 
 ebnf/grammar.txt
 #style sheets
-css/application.min.css
-css/bootstrap.min.css
-css/doremi.min.css
+css/app.css
+#css/application.min.css
+#css/bootstrap.min.css
+#css/doremi.min.css
 
 #style sheet images
 data:image/gif;base64,R0lGODlhCQAHAID/AAAAAMDAwCH5BAEAAAEALAAAAAAJAAcAQAINjI8Bu8idomHpgQpDAQA7
