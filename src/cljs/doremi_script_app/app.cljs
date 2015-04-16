@@ -105,6 +105,7 @@
 (def generate-staff-notation-URL
   "http://ragapedia.com/doremi-server/run-lilypond-on-doremi-text")
 
+
 (defn simple-audio-controls[]
   [:div.btn-group.btn-group-sm
     [:button#play.btn.btn-secondary {
@@ -1486,12 +1487,15 @@
     :on-click 
     (fn [e]
       (.preventDefault e)
+     (let [src (.-value (sel1 :#the_area))] 
+       (if (= src "")
+         (js/alert "Nothing entered")
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
-        {:src (.-value (sel1 :#the_area))
+        {:src src
          :kind (get-in @app-state [:composition-kind])
          })
-      )
+      )))
     }
    "Generate Staff Notation and audio"
    ] 

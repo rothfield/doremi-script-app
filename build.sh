@@ -6,14 +6,18 @@ echo "running boot cljs -O advanced"
 boot cljs -O advanced
 echo "minifying application.css and doremi.css in target/css.
 #Uses npm minify command"
-# "To install: sudo npm install -g  minifier"
+# sudo npm install -g minify 
 cd ./target/css
-minify application.css doremi.css
+# minify doesn't take multiple args
 echo "combining css files into app.min.css"
-cat bootstrap.min.css doremi.min.css application.min.css > app.min.css
+minify bootstrap.min.css doremi.css application.css > app.min.css
 cd ..
-echo "adding async to script tag for app.js in index.html"
-sed -i 's/app.js\"/app.js\" async/g' index.html 
+cd js
+echo "minifying app.js"
+minify app.js > app.min.js
+cd ..
+echo "adding async to script tag for app.js in index.html and changing app.js to app.min.js"
+sed -i 's/app.js\"/app.min.js\" async/g' index.html 
 echo "adding manifest to html tag in index.html"
 echo "deleting stylesheet tags"
 sed -i 's#<link rel=\"stylesheet\".*># <!-- & --> #' index.html
