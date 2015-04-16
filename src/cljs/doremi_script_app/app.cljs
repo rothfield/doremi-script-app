@@ -80,6 +80,7 @@
 (defonce app-state
   (atom 
     {:composition-kind :sargam-composition
+     :mp3-url "http://ragapedia.com/compositions/yesterday.mp3"
      :render-as :sargam-composition
      :staff-notation-path nil 
      :parse-results nil
@@ -103,7 +104,25 @@
 (def generate-staff-notation-URL
   "http://ragapedia.com/doremi-server/run-lilypond-on-doremi-text")
 
-
+(defn audio-div[]
+[:div.audio-div
+    [:audio#audio
+         {:preload "auto",
+               :src (:mp3-url @app-state)}]
+    [:button#play {
+    :on-click (fn[event] 
+                (.load (by-id "audio"))
+                (.play (by-id "audio"))
+               (.preventDefault event) )
+      }"Play"]
+    [:button#stop 
+     {
+    :on-click (fn[event] 
+                (.pause (by-id "audio"))
+               (.preventDefault event) )
+     }
+     "Stop"]]
+)
 
 (defn generate-staff-notation-xhr [url content]
   (log "entering generate-staff-notation-URL" url content)
@@ -113,6 +132,7 @@
         ]
     (.set query-data "src"  (:src content))
     (.set query-data "kind"  (name (:kind content)))
+    (.set query-data "mp3"  true)
     (xhr/send url
               (fn [event]
                 (log "in callback")
@@ -1463,7 +1483,7 @@
          })
       )
     }
-   "Generate Staff Notation"
+   "Generate Staff Notation and audio"
    ] 
   )
 
@@ -1519,15 +1539,10 @@
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
-   [:a.btn.btn-info 
-    { :href "http://github.com/rothfield/doremi-script#readme",
-            :target "_blank",
-            :title "Opens in new window"}
-       "Help"]
-   (if (:mp3-url @app-state)
-   [mp3-url]) 
+   [audio-div]
    ]
   )
+
 (defn parse-failed[]
   ;;; unused
   [:div.compositionParseFailed.hidden

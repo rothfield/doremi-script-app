@@ -1,6 +1,8 @@
-echo "running git pull"
-git pull
+#echo "running git pull"
+#git pull
 
+mkdir -p ./target/css
+mkdir -p  ./target/js
 echo "running boot cljs -O advanced"
 echo "minifying application.css and doremi.css in resources/css. Uses npm minify command"
 echo "To install: sudo npm install -g  minifier"
