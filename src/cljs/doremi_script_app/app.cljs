@@ -105,7 +105,6 @@
 (def generate-staff-notation-URL
   "http://ragapedia.com/doremi-server/run-lilypond-on-doremi-text")
 
-
 (defn simple-audio-controls[]
   [:div.btn-group.btn-group-sm
     [:button#play.btn.btn-secondary {
@@ -399,15 +398,24 @@
 
 
 
-(defn parse-results-box [{parsed :parsed }]
+(defn parse-results-box [{parsed :parsed  error :error}]
   [:div.form-group
-   [:label {:for "parse-results"} "Parse Results:"]
+   {
+     :class (if error "has-error" "") 
+    }
+   [:label.control-label {:for "parse-results"
+            } "Parse Results:"]
    [:textarea#parse-results.form-control 
     {:rows "3" 
      :spellCheck false
      :readOnly true
      :value 
-     (.stringify js/JSON (clj->js parsed))
+    (if error
+      (print-str error)
+      (print-str parsed)
+    ;; (.stringify js/JSON (clj->js error))
+     ;; (.stringify js/JSON (clj->js parsed))
+      )
      }
     ]])
 
@@ -1487,15 +1495,12 @@
     :on-click 
     (fn [e]
       (.preventDefault e)
-     (let [src (.-value (sel1 :#the_area))] 
-       (if (= src "")
-         (js/alert "Nothing entered")
       (generate-staff-notation-xhr 
         generate-staff-notation-URL
-        {:src src
+        {:src (.-value (sel1 :#the_area))
          :kind (get-in @app-state [:composition-kind])
          })
-      )))
+      )
     }
    "Generate Staff Notation and audio"
    ] 
@@ -1576,7 +1581,11 @@
                          :render-as (get @app-state :render-as) 
                          } ]
    [staff-notation]
-   [parse-results-box {:parsed (get-in @app-state [:parse-results,:parsed])}]
+   [parse-results-box {
+                       :error (get-in @app-state [:parse-results,:error])
+                       :parsed (get-in @app-state [:parse-results,:parsed])}]
+
+
    ]
   )
 

@@ -1911,17 +1911,20 @@
             ;;       (:parsed %)))
           ]
    }
-    (log "doremi-text->collapsed-parse-tree kind is" kind) 
+    (prn "****doremi-text->collapsed-parse-tree kind is" kind) 
     (log "doremi-text->collapsed-parse-tree txt is" txt) 
   (let [ parsed  (doremi-text->parse-tree txt kind) ]
        (log "parsed:")
        (log  parsed)
     (if (parse-failed? parsed)  ;; error
+      (do
+        (prn "parse-failed!! parsed is " parsed)
       {:src txt
        :parsed nil
        :lilypond nil
-       :error (-> parsed format-instaparse-errors)
-       }
+       :error (format-instaparse-errors (insta/get-failure parsed))
+       })
+      ;; else
       (let [
             collapsed-parse-tree
             (vec (map (fn[z] (if (is? :stave z)
