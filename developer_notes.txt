@@ -1,3 +1,7 @@
+NOTE:This project does NOT provide a web server.
+Note that in development mode, boot dev provides a web server
+In production, my server uses nginx.
+
 
 # start development environment
 boot dev
@@ -12,4 +16,11 @@ sudo npm install -g http-server
 
 # Test production code
 http-server target
+
+The script build.css compiles in production mode, minifies, sets script tag async, and updates manifest.
+To deploy to production:
+
+git pull; ./build.sh
+
+
 
