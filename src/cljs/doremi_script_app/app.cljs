@@ -397,6 +397,25 @@
 
 
 
+(defn downloads[]
+  [:div.dropdown.downloads
+      [:button#dropdownMenu1.btn.btn-default.dropdown-toggle
+           {:aria-expanded "true", :data-toggle "dropdown", :type "button"}
+           "Downloads"
+           [:span.caret]]
+      [:ul.dropdown-menu
+           {:aria-labelledby "dropdownMenu1", :role "menu"}
+ (doall (map-indexed
+           (fn[idx z] [:li
+                 {:role "presentation"}
+                 [:a
+                        {:href (or (z @app-state) "#") 
+                         :target "_blank"
+                         :tabindex "-1", :role "menuitem"}
+                      (string/replace (name z) #"-url$"   "")]])
+                      [:mp3-url :midi-url :doremi-text-url :lilypond-url :staff-notation-url])) 
+]]      
+  )
 
 (defn parse-results-box [{parsed :parsed  error :error}]
   [:div.form-group
@@ -1558,6 +1577,9 @@
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
+   (if (:staff-notation-url @app-state)
+   [downloads])
+
    (if (:mp3-url @app-state)
    [audio-div])
    ]

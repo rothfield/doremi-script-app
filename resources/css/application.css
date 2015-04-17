@@ -4,6 +4,9 @@ select.selectNotation.form-control ,select.renderAs.form-control {
 .form-inline audio {
   vertical-align: middle
 }
+div.downloads {
+  display:inline-block;
+}
 div.composition {
   overflow:auto;
   height:175px;
