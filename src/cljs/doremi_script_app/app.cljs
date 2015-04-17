@@ -14,10 +14,11 @@
     [clojure.set]
     [clojure.string :as string :refer [lower-case upper-case join]]
     [dommy.core :as dommy :refer-macros [sel sel1]]
-    ;;  [cljs.core.async :refer [<! chan close!]]
+;;    [cljs.core.async :refer [<! chan close! timeout put!]]
     [reagent.core :as reagent :refer [dom-node atom]]
     [instaparse.core :as insta] 
     ))
+
 
 (def mode->notes-used
   {
@@ -554,7 +555,7 @@
 
 (defn entry-area-box[]
   [:div.form-group
-   [:label {:for "entryArea"} "Enter Letter Notation:"]
+   [:label {:for "entryArea"} "Enter Letter Notation Source:"]
    [:textarea#the_area.entryArea.form-control
     {
      :autofocus true
@@ -579,8 +580,10 @@
       )))
 
 (defn composition
+
   [{parsed :parsed
     render-as :render-as }]
+
   (if (nil? parsed)
     [:div.composition.doremiContent
      ]
@@ -589,23 +592,7 @@
      (draw-children (rest parsed))]
     ))
 
-(defn attribute-section[{item :item}]
-  nil
-  )
 
-
-
-(defn notes-line [{item :item}]
-  (.log js/console "notes-line, item is")
-  (my-log2 item)
-  (assert (is-a "notes-line" item))
-  [:div.stave.sargam_line
-   (draw-children (rest item))])
-;; TODO
-;;; componentDidMount: function () { window.dom_fixes($(this.getDOMNode())); },
-;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
-;; var items = rest(item);
-;;
 (defn parse[]
   (when (by-id "the_area")
     (let [;; current (get @app-state :doremi-text)
@@ -672,6 +659,41 @@
           (swap! app-state assoc-in [:last-text-parsed] current)
           )
         ))))
+
+(defn parse-button[]
+  [:button.btn.btn-primary
+   {
+    :title "Redraw Letter Notation",
+    :name "redraw_letter_notation"
+    :on-click 
+    (fn [e]
+      (.preventDefault e)
+      (parse)
+      )
+    }
+   "Redraw"
+   ] 
+  )
+
+
+
+(defn attribute-section[{item :item}]
+  nil
+  )
+
+
+
+(defn notes-line [{item :item}]
+  (.log js/console "notes-line, item is")
+  (my-log2 item)
+  (assert (is-a "notes-line" item))
+  [:div.stave.sargam_line
+   (draw-children (rest item))])
+;; TODO
+;;; componentDidMount: function () { window.dom_fixes($(this.getDOMNode())); },
+;;   componentDidUpdate: function () { window.dom_fixes($(this.getDOMNode())); },
+;; var items = rest(item);
+;;
 
 (defn zzextract-notes-used[s]
   ;; s is like "SrgMPDn"
@@ -866,6 +888,15 @@
               }
              ))
 
+(defn composition-box[]
+  [:div.form-group
+   [:label {:for "entryArea"} "Rendered Letter Notation: "]
+   [parse-button]  
+   [composition-wrapper {:parsed (get-in @app-state [:parse-results,:parsed])
+                         :render-as (get @app-state :render-as) 
+                         } ]
+ ] 
+  )
 
 (defn ornament-pitch[{item :item
                       render-as :render-as}]
@@ -1506,6 +1537,7 @@
      "sargam"]]]
   )
 
+
 (defn generate-staff-notation-button[]
   [:button.btn.btn-primary
    {
@@ -1599,9 +1631,7 @@
   [:div.doremiBox
    [controls]
    [entry-area-box]
-   [composition-wrapper {:parsed (get-in @app-state [:parse-results,:parsed])
-                         :render-as (get @app-state :render-as) 
-                         } ]
+   [composition-box]
    [staff-notation]
    [parse-results-box {
                        :error (get-in @app-state [:parse-results,:error])
@@ -1629,7 +1659,7 @@
         )
   (if old-val
      (set! (.-value (sel1 :#the_area)) old-val))
-  (start-parse-timer)
+  ;;(start-parse-timer)
   ))
 
 
