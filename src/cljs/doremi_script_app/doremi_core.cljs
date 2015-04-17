@@ -12,7 +12,7 @@
     [instaparse.viz :as viz]
     ))
 
-
+(enable-console-print!)
 
 (declare doremi-text->parse-tree
          doremi-text->collapsed-parse-tree
@@ -36,6 +36,32 @@
 
 (defonce grammar (atom nil))
 
+(defn print-out-grammar[my-parser]
+  ;; use this to create ebnf.txt file
+  (binding [*print-dup* true] 
+          (prn (:grammar my-parser)
+    )))
+
+(defn load-grammar-slow[]
+  (prn "load-grammar-slow")
+    (.send goog.net.XhrIo 
+           "ebnf/doremiscript.ebnf" ;; serialized
+           (fn load-grammar-callback[x]
+             (let [data (js->clj (.getResponseText (.-target x))
+                                 :keywordize-keys true)
+                   _ (prn "load-grammar-slow- count data is " (count data))
+                 ;;  _ (prn "data is" data)
+                   parser (insta/parser data) 
+                   ]
+               (.log js/console (print-out-grammar parser))
+                ;;   (prn "parser is\n" parser)
+            ;;   (reset! grammar (read-string data)) ;; for debugging
+             ;;  (reset! parser (insta/parser @grammar :start :sargam-composition :total true))
+              ;; (log "grammar initialized") 
+               ))))
+
+;;; to regenerate grammar run (load-grammar-slow)
+  ;;; and copy the output to resources/ebnf/grammar.txt
 (defn load-grammar[]
   (log "load-grammar")
   ;;;Optional keyword arguments to insta/parser:
@@ -62,13 +88,6 @@
 
 (load-grammar)
 
-(defn print-out-grammar[]
-  ;; use this to create ebnf.txt file
-  (binding [*print-dup* true] 
-    (log "using prn-str" 
-          (with-out-str (prn (:grammar @parser)))
-          )
-    ))
 
 
 (defn parse[x kind]
