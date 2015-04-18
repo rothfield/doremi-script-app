@@ -1,5 +1,5 @@
-#echo "running git pull"
-#git pull
+echo "running git pull"
+git pull
 echo "cleaning target"
 rm -rf target
 echo "running boot cljs -O advanced"
