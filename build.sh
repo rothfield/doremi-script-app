@@ -1,3 +1,4 @@
+
 echo "running git pull"
 git pull
 echo "cleaning target"
@@ -9,18 +10,31 @@ echo "minifying application.css and doremi.css in target/css.
 # sudo npm install -g minify 
 cd ./target/css
 # minify doesn't take multiple args
+echo "minifying bootstrap.css doremi.css and application.css" 
+minify bootstrap.css 
+minify doremi.css 
+minify application.css 
 echo "combining css files into app.min.css"
-minify bootstrap.min.css doremi.css application.css > app.min.css
+cat bootstrap.min.css doremi.min.css application.min.css > app.min.css
 cd ..
 cd js
 echo "minifying app.js"
-minify app.js > app.min.js
+minify app.js 
+minify jquery.js
+minify bootstrap.js
+cat jquery.min.js bootstrap.min.js app.min.js > app.min.js
 cd ..
 echo "adding async to script tag for app.js in index.html and changing app.js to app.min.js"
 sed -i 's/app.js\"/app.min.js\" async/g' index.html 
 echo "adding manifest to html tag in index.html"
 echo "deleting stylesheet tags"
 sed -i 's#<link rel=\"stylesheet\".*># <!-- & --> #' index.html
+	  #<script src="js/jquery.js"></script>  
+	  #<script src="js/bootstrap.js"></script>
+sed -i 's#<script src=\"js/jquery.js\".*>#<!-- & --> #' index.html
+sed -i 's#<script src=\"js/bootstrap.js\".*>#<!-- & --> #' index.html
+
+
 echo "adding stylesheet css/app.min.css"
 sed -i 's#</body># </body>\n<link rel=\"stylesheet\" href=\"css/app.min.css\">#' index.html
 sed  -i 's/^<html /<html manifest="manifest.appcache" /' index.html

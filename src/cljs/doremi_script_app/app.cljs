@@ -104,7 +104,7 @@
 ;;(defn ajax-json [formName]  (let [action         (str (get-form-action formName) ".json")        formData     (.toObject (.getFormDataMap goog.dom.forms (dom/$ formName)))        serialized    (goog.json.serialize formData)]        (.send goog.net.XhrIo action callback  'POST' serialized )))
 
 (def generate-staff-notation-URL
-  "http://ragapedia.com/doremi-server/run-lilypond-on-doremi-text")
+  "/doremi-server/run-lilypond-on-doremi-text")
 
 (defn simple-audio-controls[]
   [:div.btn-group.btn-group-sm
