@@ -7,6 +7,7 @@
     [doremi-script-app.utils :refer [my-log2 my-log by-id log is-a] ]
     [doremi-script-app.doremi_core :as doremi_core
      :refer [doremi-text->collapsed-parse-tree]]
+    [goog]
     [goog.dom :as dom]
     [goog.Uri :as guri] 
     [goog.net.XhrIo :as xhr]
@@ -134,6 +135,21 @@
 ;;  [simple-audio-controls]
  ;;]
 )
+(defn load-doremi-url-xhr[url]
+       (.log js/console "load-doremi-url-xhr")
+    (log "load-doremi-url-xhr: url is" url)
+    (xhr/send (clojure.string/replace url "/compositions/" "/compositions2/")
+              (fn [event]
+                (.log js/console "in callback")
+                (let [raw-response (.-target event)
+                      response-text (.getResponseText raw-response)
+                   ;;   e (dom/getElement "the_area")
+                      ]
+     (set! (.-value (sel1 :#the_area)) response-text)
+                    ;; (doto e (dom/setTextContent raw-response))
+                  ))
+              "GET"))
+  
 
 (defn generate-staff-notation-xhr [url content]
   (log "entering generate-staff-notation-URL" url content)
@@ -164,7 +180,10 @@
                   (swap! app-state assoc :lilypond-url
                             (:lilypond-url my-map))
                   (swap! app-state assoc :doremi-text-url
-                            (:doremi-text-url my-map))
+                            (clojure.string/replace
+                             (:doremi-text-url my-map)
+                              "/compositions/" "/compositions2/")
+                              )
                   (log "app-state is" @app-state)
                   ))
               "POST"
@@ -1537,7 +1556,6 @@
      "sargam"]]]
   )
 
-
 (defn generate-staff-notation-button[]
   [:button.btn.btn-primary
    {
@@ -1648,7 +1666,16 @@
 (def generate-initial-page true)
 
 (defn init []
-  (let [old-val (.-value (.getElementById js/document "the_area"))]
+  
+  (let [old-val (.-value (.getElementById js/document "the_area"))
+       url-to-load (.getParameterValue
+        (new goog/Uri (.-href (.-location js/window)))
+                                  "url")
+        _ (prn "url-to-load is" url-to-load)
+        ]
+  (when url-to-load
+     (load-doremi-url-xhr url-to-load))
+
   (reagent/render-component 
     [calling-component]
     (.getElementById js/document "container"))
