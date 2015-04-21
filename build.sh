@@ -19,10 +19,9 @@ cat bootstrap.min.css doremi.min.css application.min.css > app.min.css
 cd ..
 cd js
 echo "minifying app.js"
-minify app.js 
 minify jquery.js
 minify bootstrap.js
-cat jquery.min.js bootstrap.min.js app.min.js > app.min.js
+cat jquery.min.js bootstrap.min.js app.js > app.min.js
 cd ..
 echo "adding async to script tag for app.js in index.html and changing app.js to app.min.js"
 sed -i 's/app.js\"/app.min.js\" async/g' index.html 
