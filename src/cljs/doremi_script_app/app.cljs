@@ -7,7 +7,6 @@
     [doremi-script-app.utils :refer [my-log2 my-log by-id log is-a] ]
     [doremi-script-app.doremi_core :as doremi_core
      :refer [doremi-text->collapsed-parse-tree]]
-    [goog]
     [goog.dom :as dom]
     [goog.Uri :as guri] 
     [goog.net.XhrIo :as xhr]

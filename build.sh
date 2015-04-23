@@ -18,7 +18,7 @@ echo "combining css files into app.min.css"
 cat bootstrap.min.css doremi.min.css application.min.css > app.min.css
 cd ..
 cd js
-echo "minifying app.js"
+echo "minifying "
 minify jquery.js
 minify bootstrap.js
 cat jquery.min.js bootstrap.min.js app.js > app.min.js
