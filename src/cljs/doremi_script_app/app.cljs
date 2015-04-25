@@ -19,6 +19,7 @@
     ))
 
 (def production?
+  ;; set the global in index.html
   (and (not= js/undefined js/DOREM_SCRIPT_APP_ENV)
        (= js/DOREM_SCRIPT_APP_ENV "production")
        ))
@@ -30,15 +31,31 @@
 
 (def mode->notes-used
   {
-   :major "SRGmPDN"
    :ionian "SRGmPDN"
    :dorian "SRgmPDn"
    :phyrgian "SrgmPdn"
    :lydian "SRGMPDN"
    :mixolydian "SRGmPDn"
    :aeolian "SRgmPdn"
-   :minor "SRgmPdn"
    :locrian "SrgmPdn"
+
+   :major "SRGmPDN"
+   :minor "SRgmPdn"
+   (keyword "harmonic minor") "SRgmPdN"
+
+   :bilaval "SRGmPDN"
+   :kafi "SRgmPDn"
+   :bhairavi "SrgmPdn"
+   :kalyan "SRGMPDN"
+   :khammaj "SRGmPDn"
+   :asavri "SRgmPdn"
+
+   :marwa "SrGMPDN"
+   :purvi "SrGMPdN"
+   :lalit "SrGmMPdN"
+   :hindol "SGMDN"
+   :kirwani "SRgmPdN"
+   (keyword "ahir bhairav") "SrGmPDn"
    }) 
 
 (enable-console-print!)
@@ -46,7 +63,6 @@
 ;;
 ;;(log "(-> | S-  doremi-text->parsed))" (-> "| S- " doremi-text->parsed))
 
-(defonce key-map (reagent.core/atom {}))
 
 (def lower-sargam? #{"s" "r" "g" "m" "p" "d" "n"})
 (def upper-sargam? #{"S" "R" "G" "M" "P" "D" "N"})
@@ -66,24 +82,25 @@
          (remove-if-both-cases #{"N" "n" "S"} "n"))
 
 (defn notes-used-set-for[{mode :mode notes-used :notes-used}]
+  (log "entering notes-used-set-for, mode,notes-used" mode notes-used)
   (let [
         mode-notes-used (when mode
-                          (get mode->notes-used  (lower-case mode) ""))
-        notes-used2 (set (cond 
-                           notes-used
-                           notes-used
-                           mode-notes-used
-                           mode-notes-used
-                           :else 
-                           "SP"))
+                          (get mode->notes-used  (keyword (lower-case mode)) ""))
+        _ (log "mode-notes-used=*************" mode-notes-used)
+        notes-used2 (or  notes-used
+                        mode-notes-used
+                        "SP")
+        _ (log "notes-used2=*************" notes-used2)
+
         ]
+    (assert (string? notes-used2))
     (set (reduce (fn[accum item] (remove-if-both-cases accum item))
                  notes-used2
                  "rgmdn"))
     ))
-;;(sargam-set->key-map  notes-used)
 
 (defn sargam-set->key-map[sargam-set]
+  ;; Returns a keymap: ie {"s" "S" }. Saves typing
   (assert (set? sargam-set))
   (my-log2 "entering sargam-set->key-map sargam-set is" sargam-set)
   (reduce (fn[accum item]
@@ -101,12 +118,13 @@
   (comment "test:  @key-map is" @key-map)
   )
 
-
-(defonce last-text-value (reagent.core/atom ""))
+(defonce key-map (reagent.core/atom {}))
 
 (defonce app-state
   (reagent.core/atom 
-    {:composition-kind :sargam-composition
+    {
+     :ajax-is-running false 
+     :composition-kind :sargam-composition
      :mp3-url nil
      ;;"http://ragapedia.com/compositions/yesterday.mp3"
      :render-as :sargam-composition
@@ -115,135 +133,105 @@
      }))
 
 
-(def log-off true)
-(declare draw-item)
-
-(defn to-s[x]
-  (.stringify js/JSON (clj->js x)))
+(declare draw-item) ;; need forward reference since it is recursive
 
 (enable-console-print!)
 
-(defn class-name-for[x]
+(defn css-class-name-for[x]
   (string/replace (name x) "-" "_")
   )
 
 
-(def generate-staff-notation-URL
+(def GENERATE-STAFF-NOTATION-URL
   (if production?
     "http://ragapedia.com/doremi-server/run-lilypond-on-doremi-text"
     "http://localhost:4000/doremi-server/run-lilypond-on-doremi-text")
   )
 
 
-(defn simple-audio-controls[]
-  [:div.btn-group.btn-group-sm
-   [:button#play.btn.btn-secondary {
-                                    :on-click (fn[event] 
-                                                (.load (by-id "audio"))
-                                                (.play (by-id "audio"))
-                                                (.preventDefault event) )
-                                    }"Play"]
-   [:button#stop.btn.btn-secondary 
-    {
-     :on-click (fn[event] 
-                 (.pause (by-id "audio"))
-                 (.preventDefault event) )
-     }
-    "Stop"]
-   ]
-  )
-
-(defn audio-div[]
-  ;;[:div.audio-div.form-group
-  [:audio#audio
-   {
-    :controls "controls"
-    :preload "auto",
-    :src (:mp3-url @app-state)}]
-  ;;  [simple-audio-controls]
-  ;;]
-  )
 (defn load-doremi-url-xhr[url]
+  (swap! app-state assoc :ajax-is-running true)
   (.log js/console "load-doremi-url-xhr")
   (log "load-doremi-url-xhr: url is" url)
   (goog.net.XhrIo/send url
-            ;; (clojure.string/replace url "/compositions/" "/compositions2/")
-            (fn [event]
-              (.log js/console "in callback")
-              (let [raw-response (.-target event)
-                    response-text (.getResponseText raw-response)
-                    ]
-                (set! (.-value (sel1 :#the_area)) response-text)
-                ))
-            "GET"))
+                       (fn [event]
+                         (swap! app-state assoc :ajax-is-running false)
+                         (.log js/console "in callback")
+                         (let [raw-response (.-target event)
+                               response-text (.getResponseText raw-response)
+                               ]
+                           (set! (.-value (sel1 :#the_area)) response-text)
+                           ))
+                       "GET"))
 
+
+(defn generate-staff-notation-xhr-callback[event]
+    (swap! app-state assoc :ajax-is-running false)
+  (log "in generate-staff-notation-xhr callback")
+  (let [raw-response (.-target event)
+        response-text (.getResponseText raw-response)
+        my-map (-> response-text
+                   goog.json/parse
+                   (js->clj :keywordize-keys true)
+                   )
+        links (:links my-map)
+        notes-used (get-in my-map [:parse-results :attributes :notesused])
+        mode (get-in my-map [:parse-results :attributes :mode])
+        ]
+
+    (prn "in callback my-map" my-map)
+    (prn "in callback mode=********" mode)
+    (prn "in callback, links=" links)
+    (prn "*****in callback, notes-used,mode" notes-used mode)
+    ;;; TODO: have :links key in app-state or separate atom
+    ;;; for links
+    (prn "(:error my-map)=" (:error my-map))
+    (when (not (:error my-map))
+      (reset! key-map
+              (->
+                {:mode mode :notes-used notes-used}
+                notes-used-set-for
+                sargam-set->key-map ))) 
+
+    (reset!  app-state
+            ;; TODO: use merge
+            (assoc @app-state
+                   :parse-results
+                   (:parse-results my-map)
+                   :error
+                   (:error my-map)
+                   :browse-url
+                   (:browse-url links)
+                   :pdf-url
+                   (:pdf-url links)
+                   :mp3-url
+                   (:mp3-url links)
+                   :staff-notation-url
+                   (:staff-notation-url links)
+                   :midi-url
+                   (:midi-url links)
+                   :lilypond-url
+                   (:lilypond-url links)
+                   :doremi-text-url
+                   (:doremi-text-url links)))
+    (prn "after xhr callback-app-state is" @app-state)
+    ))
 
 (defn generate-staff-notation-xhr [url content]
-  (log "entering generate-staff-notation-URL" url content)
+  (when (not (:ajax-is-running @app-state))
+  (log "entering GENERATE-STAFF-NOTATION-URL" url content)
   (swap! app-state assoc :staff-notation-url nil)
-
-  (let [
-        query-data (new goog.Uri/QueryData)
-        ]
+    (swap! app-state assoc :ajax-is-running true)
+  
+  (let [ query-data (new goog.Uri/QueryData) ]
+    ;; TODO: try sending json
     (.set query-data "src"  (:src content))
     (.set query-data "kind"  (name (:kind content)))
     (.set query-data "mp3"  true)
     (goog.net.XhrIo/send url
-              (fn [event]
-                (log "in generate-staff-notation-xhr callback")
-                (let [raw-response (.-target event)
-                      response-text (.getResponseText raw-response)
-                      my-map (-> response-text
-                                 goog.json/parse
-                                 (js->clj :keywordize-keys true)
-                                 )
-                      links (:links my-map)
-                      notes-used (get-in my-map [:parse-results :attributes :notesused])
-                      mode (get-in my-map [:parse-results :attributes :mode])
-                      ]
-                  (prn "in callback my-map" my-map)
-                  (prn "in callback, links=" links)
-                  (prn "*****in callback, notes-used,mode" notes-used mode)
-                  ;;; TODO: have :links key in app-state or separate atom
-                  ;;; for links
-                  (prn "(:error my-map)=" (:error my-map))
-                  (when true ;;;(or notes-used mode)
-                    (reset! key-map
-                            (->
-                              {:mode mode :notes-used notes-used}
-                              notes-used-set-for
-                              sargam-set->key-map ))) 
-                  (reset! app-state
-                          (assoc @app-state
-                          :parse-results
-                         (:parse-results my-map)
-                         :error
-                         (:error my-map)
-                           :browse-url
-                         (:browse-url links)
-                         :pdf-url
-                         (:pdf-url links)
-                          :mp3-url
-                         (:mp3-url links)
-                          :staff-notation-url
-                         (:staff-notation-url links)
-                         :midi-url
-                         (:midi-url links)
-                         :lilypond-url
-                         (:lilypond-url links)
-                         :doremi-text-url
-                         (:doremi-text-url links)))
-                  (prn "after xhr callback-app-state is" @app-state)
-                  ))
-              "POST"
-              query-data)))
-
-
-
-;;;;     
-;;;;     . The Unicode character ♭(U+266D) is the flat sign. Its HTML entity is &#9837;.
-;;;;    In Unicode, the sharp symbol (♯) is at code point U+266F. Its HTML entity is &#9839;. The symbol for double sharp (double sharp) is at U+1D12A (so &#119082;). These characters may not display correctly in all fonts.
-;;;;    */
+                         generate-staff-notation-xhr-callback
+                         "POST"
+                         query-data))))
 
 (def class-for-octave
   {nil "octave0"
@@ -274,6 +262,11 @@
    }
   )
 
+
+
+;;     . The Unicode character ♭(U+266D) is the flat sign. Its HTML entity is &#9837;.
+;;    In Unicode, the sharp symbol (♯) is at code point U+266F. Its HTML entity is &#9839;. The symbol for double sharp (double sharp) is at U+1D12A (so &#119082;). These characters may not display correctly in all fonts.
+
 (def bullet "&bull;")
 (def sharp-symbol "&#9839;")
 (def flat-symbol  "&#9837;")
@@ -291,11 +284,7 @@
                     "|]" "|"
                     "[|" "|"
                     })
-;;;;        return LOOKUP[str];
-;;;;      };
-;;;;      if (false) {
-;;;;        console.log(lookup_simple)
-;;;;      }
+
 (def lookup_html_entity {
                          "b" "&#9837;"
                          "#" "&#9839;"
@@ -332,6 +321,7 @@
               "B" ["N"]
               "B#" ["N", sharp-symbol]
               })
+
 (def lookup-number  {
                      "Cb" ["1", flat-symbol]
                      "C" ["1"]
@@ -386,6 +376,7 @@
      "B" n
      "B#" (str n  sharp-symbol)
      }))
+
 (def lookup-ABC {
                  "Cb" ["C", flat-symbol]
                  "C" ["C"]
@@ -466,13 +457,11 @@
    }
   )
 
-
-
 (defn downloads[]
   [:div.dropdown.downloads
    [:button#dropdownMenu1.btn.btn-default.dropdown-toggle
     {:aria-expanded "true", :data-toggle "dropdown", :type "button"}
-    "Downloads"
+    "Links"
     [:span.caret]]
    [:ul.dropdown-menu
     {:aria-labelledby "dropdownMenu1", :role "menu"}
@@ -498,8 +487,8 @@
 (defn display-parse-to-user-box []
   (let [error (get-in @app-state [:error])
         _ (prn "in display-parse-to-user-box, error=" error)
-        parsed (get-in @app-state [:parse-results :parsed])
-        _ (prn "in display-parse-to-user-box, parsed" parsed)
+        parse-results (get-in @app-state [:parse-results])
+        _ (prn "in display-parse-to-user-box, parsed" parse-results)
         ]
     [:div.form-group
      {
@@ -514,10 +503,9 @@
        :value 
        (if error
          (print-str error)
-         (print-str parsed))
+         (print-str parse-results))
        }
       ]]))
-
 
 
 ;;;;     parse: function () {
@@ -659,13 +647,13 @@
 
 (defn composition[]
   (let [parsed-map (:parse-results @app-state)] 
-    
-  (if (not parsed-map)
-    [:div.composition.doremiContent ]
-    ;; else
-    [:div.composition.doremiContent
-     (draw-children (rest (:parsed parsed-map)))]
-    )))
+
+    (if (not parsed-map)
+      [:div.composition.doremiContent ]
+      ;; else
+      [:div.composition.doremiContent
+       (draw-children (rest (:parsed parsed-map)))]
+      )))
 
 
 (defn parse[]
@@ -966,7 +954,7 @@
 (defn composition-box[]
   [:div.form-group
    [:label {:for "entryArea"} "Rendered Letter Notation: "]
-  ;; [parse-button]  TODO: put back in or NOT ???!!!
+   ;; [parse-button]  TODO: put back in or NOT ???!!!
    [composition-wrapper]
    ] 
   )
@@ -1225,7 +1213,7 @@
         h (if end-slur-id
             {:data-begin-slur-id (second end-slur-id) }
             {}
-            :class (class-name-for (first item)) 
+            :class (css-class-name-for (first item)) 
             )
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
@@ -1332,8 +1320,8 @@
   (log "syl- item is")
   (log item)
   (when (not= (second item) EMPTY-SYLLABLE)
-  [:span.syl (second item)]
-  ))
+    [:span.syl (second item)]
+    ))
 
 ;;;;  
 ;;;;      var Octave = createClass({
@@ -1622,14 +1610,19 @@
     :on-click 
     (fn [e]
       (.preventDefault e)
+      (when (not (:ajax-is-running @app-state))
+        (prn "in generate-staff-notation-button callback")
       (generate-staff-notation-xhr 
-        generate-staff-notation-URL
+        GENERATE-STAFF-NOTATION-URL
         {:src (.-value (sel1 :#the_area))
          :kind (get-in @app-state [:composition-kind])
          })
-      )
+      ))
     }
-  "Redraw" ;; "Generate Staff Notation and audio"
+   (if (:ajax-is-running @app-state)
+     "Please wait..."
+   "Redraw" ;; "Generate Staff Notation and audio"
+     )
    ] 
   )
 
@@ -1680,11 +1673,23 @@
     :title "Opens in new window"}
    "Play mp3"]
   )
+
+(defn audio-div[]
+  [:audio#audio
+   {
+    :controls "controls"
+    :preload "auto",
+    :src (:mp3-url @app-state)}]
+  )
+
 (defn controls[]
   [:form.form-inline
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
+   [:label
+    (if (:ajax-is-running @app-state) "Ajax is running" "Ajax is not running")
+    ]
    ;; (if (:staff-notation-url @app-state)
    [downloads]
 
