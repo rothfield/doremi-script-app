@@ -25,4 +25,9 @@ To deploy to production:
 git pull; ./build.sh
 
 
+Running in development mode:
+
+boot dev    
+starts a web server and serves up the app on port 3000
+and reloads and recompiles cljs as it changes
 

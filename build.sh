@@ -25,6 +25,10 @@ cat jquery.min.js bootstrap.min.js app.js > app.min.js
 cd ..
 echo "adding async to script tag for app.js in index.html and changing app.js to app.min.js"
 sed -i 's/app.js\"/app.min.js\" async/g' index.html 
+echo "setting DOREM_SCRIPT_APP_ENV=production"
+sed -i 's/DOREM_SCRIPT_APP_ENV=\"development\"/DOREM_SCRIPT_APP_ENV=\"production\"/' index.html
+
+app.js\"/app.min.js\" async/g' index.html 
 echo "adding manifest to html tag in index.html"
 echo "deleting stylesheet tags"
 sed -i 's#<link rel=\"stylesheet\".*># <!-- & --> #' index.html
