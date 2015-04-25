@@ -28,12 +28,9 @@ sed -i 's/app.js\"/app.min.js\" async/g' index.html
 echo "setting DOREM_SCRIPT_APP_ENV=production"
 sed -i 's/DOREM_SCRIPT_APP_ENV=\"development\"/DOREM_SCRIPT_APP_ENV=\"production\"/' index.html
 
-app.js\"/app.min.js\" async/g' index.html 
 echo "adding manifest to html tag in index.html"
 echo "deleting stylesheet tags"
 sed -i 's#<link rel=\"stylesheet\".*># <!-- & --> #' index.html
-	  #<script src="js/jquery.js"></script>  
-	  #<script src="js/bootstrap.js"></script>
 sed -i 's#<script src=\"js/jquery.js\".*>#<!-- & --> #' index.html
 sed -i 's#<script src=\"js/bootstrap.js\".*>#<!-- & --> #' index.html
 
