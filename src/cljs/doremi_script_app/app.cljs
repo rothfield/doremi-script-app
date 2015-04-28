@@ -1607,6 +1607,7 @@
    {
     :title "Redraws rendered letter notation and Generates staff notation and MIDI file using Lilypond",
     :name "generateStaffNotation"
+    :disabled (:ajax-is-running @app-state)
     :on-click 
     (fn [e]
       (.preventDefault e)
@@ -1620,7 +1621,7 @@
       ))
     }
    (if (:ajax-is-running @app-state)
-     "Please wait..."
+     "Redrawing..."
    "Redraw" ;; "Generate Staff Notation and audio"
      )
    ] 
@@ -1687,12 +1688,7 @@
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
-   [:label
-    (if (:ajax-is-running @app-state) "Ajax is running" "Ajax is not running")
-    ]
-   ;; (if (:staff-notation-url @app-state)
    [downloads]
-
    (if (:mp3-url @app-state)
      [audio-div])
    ]
