@@ -4,9 +4,9 @@
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
-    [doremi-script-app.utils :refer [my-log2 my-log by-id log is-a] ]
-    [doremi-script-app.doremi_core :as doremi_core
-     :refer [doremi-text->collapsed-parse-tree]]
+    [doremi-script-app.utils :refer [keywordize-vector my-log2 my-log by-id log is-a] ]
+   ;; [doremi-script-app.doremi_core :as doremi_core
+    ;; :refer [doremi-text->collapsed-parse-tree]]
     [goog.Uri] 
     [goog.net.XhrIo]
     [goog.json]
@@ -17,13 +17,14 @@
     [reagent.core]
     [instaparse.core :as insta] 
     ))
+(enable-console-print!)
 
 (def production?
   ;; set the global in index.html
   (and (not= js/undefined js/DOREM_SCRIPT_APP_ENV)
        (= js/DOREM_SCRIPT_APP_ENV "production")
        ))
-(prn "production? = " production?)
+(log "production? = " production?)
 ;;(= "production" (get (System/getenv) "APP_ENV")))
 
 (def development?
@@ -58,7 +59,6 @@
    (keyword "ahir bhairav") "SrGmPDn"
    }) 
 
-(enable-console-print!)
 ;; TODO:  | S - - - |||  three barlines crashes the parser
 ;;
 ;;(log "(-> | S-  doremi-text->parsed))" (-> "| S- " doremi-text->parsed))
@@ -68,7 +68,7 @@
 (def upper-sargam? #{"S" "R" "G" "M" "P" "D" "N"})
 
 (defn remove-if-both-cases[my-set ch]
-  ;;(my-log2 "remove-if-both-cases, " my-set ch)
+  ;;(log "remove-if-both-cases, " my-set ch)
   (let [lower-ch (lower-case ch)
         upper-ch (upper-case ch)]
     (if (and (get my-set lower-ch)
@@ -78,8 +78,7 @@
       my-set
       )))
 
-(my-log2 "remove-if-both-cases test:" 
-         (remove-if-both-cases #{"N" "n" "S"} "n"))
+;;(log "remove-if-both-cases test:" (remove-if-both-cases #{"N" "n" "S"} "n"))
 
 (defn notes-used-set-for[{mode :mode notes-used :notes-used}]
   (log "entering notes-used-set-for, mode,notes-used" mode notes-used)
@@ -102,7 +101,7 @@
 (defn sargam-set->key-map[sargam-set]
   ;; Returns a keymap: ie {"s" "S" }. Saves typing
   (assert (set? sargam-set))
-  (my-log2 "entering sargam-set->key-map sargam-set is" sargam-set)
+  (log "entering sargam-set->key-map sargam-set is" sargam-set)
   (reduce (fn[accum item]
             (if (upper-sargam? item)
               (assoc (assoc accum item (lower-case item))
@@ -151,12 +150,12 @@
 
 (defn load-doremi-url-xhr[url]
   (swap! app-state assoc :ajax-is-running true)
-  (.log js/console "load-doremi-url-xhr")
+  (log "load-doremi-url-xhr")
   (log "load-doremi-url-xhr: url is" url)
   (goog.net.XhrIo/send url
                        (fn [event]
                          (swap! app-state assoc :ajax-is-running false)
-                         (.log js/console "in callback")
+                         (log "in callback")
                          (let [raw-response (.-target event)
                                response-text (.getResponseText raw-response)
                                ]
@@ -166,26 +165,37 @@
 
 
 (defn generate-staff-notation-xhr-callback[event]
-    (swap! app-state assoc :ajax-is-running false)
+  ;; response looks somthing like
+  ;; {
+  ;;
+  ;; :links [xxx]
+  ;; :parse-results
+  ;;   {
+  ;;   :src
+  ;;   :parsed [:composition.....]
+  ;;   :erro
+  ;;   }
+  (swap! app-state assoc :ajax-is-running false)
   (log "in generate-staff-notation-xhr callback")
   (let [raw-response (.-target event)
         response-text (.getResponseText raw-response)
         my-map (-> response-text
                    goog.json/parse
                    (js->clj :keywordize-keys true)
+                   (update-in [:parse-results :parsed] keywordize-vector)
                    )
         links (:links my-map)
         notes-used (get-in my-map [:parse-results :attributes :notesused])
         mode (get-in my-map [:parse-results :attributes :mode])
         ]
 
-    (prn "in callback my-map" my-map)
-    (prn "in callback mode=********" mode)
-    (prn "in callback, links=" links)
-    (prn "*****in callback, notes-used,mode" notes-used mode)
+    (log "in callback my-map" my-map)
+    (log "in callback mode=********" mode)
+    (log "in callback, links=" links)
+    (log "*****in callback, notes-used,mode" notes-used mode)
     ;;; TODO: have :links key in app-state or separate atom
     ;;; for links
-    (prn "(:error my-map)=" (:error my-map))
+    (log "(:error my-map)=" (:error my-map))
     (when (not (:error my-map))
       (reset! key-map
               (->
@@ -214,24 +224,25 @@
                    (:lilypond-url links)
                    :doremi-text-url
                    (:doremi-text-url links)))
-    (prn "after xhr callback-app-state is" @app-state)
+    (log "after xhr callback-app-state is" @app-state)
     ))
 
 (defn generate-staff-notation-xhr [url content]
   (when (not (:ajax-is-running @app-state))
-  (log "entering GENERATE-STAFF-NOTATION-URL" url content)
-  (swap! app-state assoc :staff-notation-url nil)
+    (log "entering GENERATE-STAFF-NOTATION-URL" url content)
+    (swap! app-state assoc :staff-notation-url nil)
     (swap! app-state assoc :ajax-is-running true)
-  
-  (let [ query-data (new goog.Uri/QueryData) ]
-    ;; TODO: try sending json
-    (.set query-data "src"  (:src content))
-    (.set query-data "kind"  (name (:kind content)))
-    (.set query-data "mp3"  true)
-    (goog.net.XhrIo/send url
-                         generate-staff-notation-xhr-callback
-                         "POST"
-                         query-data))))
+    (swap! app-state assoc :parse-results nil)
+
+    (let [ query-data (new goog.Uri/QueryData) ]
+      ;; TODO: try sending json
+      (.set query-data "src"  (:src content))
+      (.set query-data "kind"  (name (:kind content)))
+      (.set query-data "mp3"  true)
+      (goog.net.XhrIo/send url
+                           generate-staff-notation-xhr-callback
+                           "POST"
+                           query-data))))
 
 (def class-for-octave
   {nil "octave0"
@@ -486,9 +497,9 @@
 
 (defn display-parse-to-user-box []
   (let [error (get-in @app-state [:error])
-        _ (prn "in display-parse-to-user-box, error=" error)
+        _ (log "in display-parse-to-user-box, error=" error)
         parse-results (get-in @app-state [:parse-results])
-        _ (prn "in display-parse-to-user-box, parsed" parse-results)
+        _ (log "in display-parse-to-user-box, parsed" parse-results)
         ]
     [:div.form-group
      {
@@ -571,7 +582,7 @@
 (def my-val (reagent.core/atom ""))
 
 (defn on-key-press[evt] 
-  (prn "entering on-key-press")
+  (log "entering on-key-press")
   (let [
         my-key-map @key-map
         target (.-target evt)
@@ -581,7 +592,7 @@
                       (.-metaKey evt))
         from-char-code-fn (.-fromCharCode js/String)
         ch (from-char-code-fn key-code)
-        ; _ (.log js/console "evt is" evt) 
+        ; _ (log "evt is" evt) 
         ; _ (comment "ch is ****" ch)
         ; _ (comment "my-key-map is" my-key-map)
         new-char (if-not ctrl-key?  (get my-key-map ch ))
@@ -641,7 +652,6 @@
            items)))
 
 (defn staff-notation[]
-  (.log js/console "staff-notation")
   [:img#staff_notation
    {:src (get @app-state :staff-notation-url)}])
 
@@ -665,7 +675,7 @@
           ajax-is-running (get @app-state :ajax-is-running)
           kind  (get @app-state :composition-kind)
           ]
-      ;;(.log js/console "current="  current)
+      ;;(log "current="  current)
       (cond 
         (= nil current)
         nil
@@ -676,8 +686,7 @@
         :else 
         (let
           [ ;;_ (log "should parse")
-           my-parse-results (doremi-text->collapsed-parse-tree 
-                              current kind)
+           my-parse-results {} ;;;;(doremi-text->collapsed-parse-tree current kind)
            _ (comment "my-parse-results" my-parse-results)
            ;;notes-used (get-in my-parse-results [:attributes :notesused])
            attributes (get my-parse-results :attributes {})
@@ -713,10 +722,10 @@
           ; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
 
 
-          (my-log2 "****in parse, parse-results are")
-          (my-log2  my-parse-results)
-          (my-log2 "in parse, app-state=")
-          (my-log2 @app-state)
+          (log "****in parse, parse-results are")
+          (log  my-parse-results)
+          (log "in parse, app-state=")
+          (log @app-state)
           (sargam-set->key-map  notes-used)
           (swap! app-state assoc-in [:parse-results] my-parse-results)
           (swap! app-state assoc-in [:last-text-parsed] current)
@@ -747,8 +756,8 @@
 
 
 (defn notes-line [{item :item}]
-  (.log js/console "notes-line, item is")
-  (my-log2 item)
+  (log "notes-line, item is")
+  (log item)
   (assert (is-a "notes-line" item))
   [:div.stave.sargam_line
    (draw-children (rest item))])
@@ -937,7 +946,7 @@
   (with-meta composition
              {:component-did-mount
               (fn[this]
-                (.log js/console "component-did-mount composition to call dom_fixes")
+                (log "component-did-mount composition to call dom_fixes")
                 (dom-fixes this)
                 ;;  (js/dom_fixes (js/$ (reagent.core/dom-node this)))
 
@@ -945,7 +954,7 @@
 
               :component-did-update
               (fn[this]
-                (.log js/console "component-did-update composition-about to call dom_fixes")
+                (log "component-did-update composition-about to call dom_fixes")
                 (dom-fixes this)
                 ) 
               }
@@ -1191,7 +1200,7 @@
   ;;
   ;;; ["pitch","C#",["octave",1],["syl","syl"]]
   ;;;  ["pitch","E",["end-slur"],["octave",0],["end-slur-id",0]]
-  (log "entring pitch") 
+  (log "entring pitch, item is" item) 
   ;;  (assert (is-a "pitch" item))
   (log item)
   ;; need to sort attributes in order:
@@ -1210,6 +1219,7 @@
                                    (= :end-slur-id (first x)))
                               x))
                           item)
+        _ (log "end-slur-id=" end-slur-id)
         h (if end-slur-id
             {:data-begin-slur-id (second end-slur-id) }
             {}
@@ -1234,16 +1244,13 @@
         item2 (if begin-slur-id
                 (into[] (cons [:slur (second begin-slur-id)] item1))
                 item1)
-        item3 (if begin-slur-id
-                (into[] (cons [:slur (second begin-slur-id)] item2))
-                item2)
 
         alteration-string (second deconstructed-pitch)
         my-pitch-alteration (when alteration-string
                               [:pitch-alteration alteration-string])
 
         item4 
-        (remove nil? (into[] (cons my-pitch-alteration item3)))
+        (remove nil? (into[] (cons my-pitch-alteration item2)))
         item5
         (remove (fn[x] (get #{:end-slur-id :slur} (first x))) item4)
         item6 (sort-by #(get sort-table (first %)) item5)
@@ -1316,7 +1323,7 @@
 
 (defn syl[{item :item}]
   (assert (is-a "syl" item))
-  (prn "in syl, item is" item)
+  (log "in syl, item is" item)
   (log "syl- item is")
   (log item)
   (when (not= (second item) EMPTY-SYLLABLE)
@@ -1388,9 +1395,8 @@
 (defn draw-item[item idx]
   (log "entering draw-item, kind is" 
        (get @app-state :render-as))
-  (log "entering draw-item, item is")
-  (log item)
-  (let [my-key (keyword (first item))]
+  (log "*************entering draw-item, item is" item)
+  (let [my-key  (first item)]
     (log "draw-item, item is")
     (log item)
     (log "key is")
@@ -1422,6 +1428,8 @@
       [stave {:key idx :item item}]
       (= my-key :measure)
       [measure {:key idx :item item}]
+      (= my-key :end-slur-id)
+      nil
       (= my-key :begin-slur-id)
       [begin-slur-id {:key idx :item item}]
       (= my-key :attribute-section)
@@ -1612,17 +1620,17 @@
     (fn [e]
       (.preventDefault e)
       (when (not (:ajax-is-running @app-state))
-        (prn "in generate-staff-notation-button callback")
-      (generate-staff-notation-xhr 
-        GENERATE-STAFF-NOTATION-URL
-        {:src (.-value (sel1 :#the_area))
-         :kind (get-in @app-state [:composition-kind])
-         })
-      ))
+        (log "in generate-staff-notation-button callback")
+        (generate-staff-notation-xhr 
+          GENERATE-STAFF-NOTATION-URL
+          {:src (.-value (sel1 :#the_area))
+           :kind (get-in @app-state [:composition-kind])
+           })
+        ))
     }
    (if (:ajax-is-running @app-state)
      "Redrawing..."
-   "Redraw" ;; "Generate Staff Notation and audio"
+     "Redraw" ;; "Generate Staff Notation and audio"
      )
    ] 
   )
@@ -1726,7 +1734,7 @@
         url-to-load (.getParameterValue
                       (new goog/Uri (.-href (.-location js/window)))
                       "url")
-        _ (prn "url-to-load is" url-to-load)
+        _ (log "url-to-load is" url-to-load)
         ]
     (when url-to-load
       (load-doremi-url-xhr url-to-load))
@@ -1734,7 +1742,7 @@
     (reagent.core/render-component 
       [calling-component]
       (.getElementById js/document "container"))
-    (.log js/console "starting timer")
+    (log "starting timer")
     (.focus (.getElementById js/document "the_area"))
     (set! (.-onkeypress (by-id "the_area"))
           on-key-press

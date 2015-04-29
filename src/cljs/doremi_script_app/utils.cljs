@@ -1,5 +1,16 @@
 (ns doremi-script-app.utils
-  )
+  (:require 
+    [clojure.walk :refer [postwalk] ]
+))
+
+(defn keywordize-vector[my-vec]
+ (postwalk (fn[x] (if (and (vector? x)
+                           (string? (first x)))
+                      (assoc x 0 (keyword (first x)))
+                    x)) my-vec  ))
+
+
+;; (prn "**********************" (keywordize-vector ["hi" 2 {"a" 1}  ["john" ["there" 1 2 3]]]))
 
 (defn is-a[s v]
   assert(= (name (first v)) (name s)))
