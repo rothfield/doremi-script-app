@@ -4,6 +4,9 @@ select.selectNotation.form-control ,select.renderAs.form-control {
 .form-inline audio {
   vertical-align: middle
 }
+div.has-error #parse-results {
+  font-family: monospace;
+}
 div.downloads {
   display:inline-block;
 }

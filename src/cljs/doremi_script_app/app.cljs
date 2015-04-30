@@ -4,7 +4,7 @@
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
-    [doremi-script-app.utils :refer [keywordize-vector my-log2 my-log by-id log is-a] ]
+    [doremi-script-app.utils :refer [get-attributes keywordize-vector my-log2 my-log by-id log is-a] ]
    ;; [doremi-script-app.doremi_core :as doremi_core
     ;; :refer [doremi-text->collapsed-parse-tree]]
     [goog.Uri] 
@@ -128,7 +128,7 @@
      ;;"http://ragapedia.com/compositions/yesterday.mp3"
      :render-as :sargam-composition
      :staff-notation-path nil 
-     :parse-results {} 
+     :composition nil 
      }))
 
 
@@ -169,11 +169,8 @@
   ;; {
   ;;
   ;; :links [xxx]
-  ;; :parse-results
-  ;;   {
-  ;;   :src
-  ;;   :parsed [:composition.....]
-  ;;   :erro
+  ;; :composition [:composition...
+  ;; :error "fadfadf"
   ;;   }
   (swap! app-state assoc :ajax-is-running false)
   (log "in generate-staff-notation-xhr callback")
@@ -182,13 +179,14 @@
         my-map (-> response-text
                    goog.json/parse
                    (js->clj :keywordize-keys true)
-                   (update-in [:parse-results :parsed] keywordize-vector)
                    )
+        composition (keywordize-vector (:composition my-map))
+        _ (when false (prn "composition is " composition))
         links (:links my-map)
-        notes-used (get-in my-map [:parse-results :attributes :notesused])
-        mode (get-in my-map [:parse-results :attributes :mode])
+        attributes (if composition (get-attributes composition) {})
+        notes-used (:notesused attributes)
+        mode (:mode attributes)
         ]
-
     (log "in callback my-map" my-map)
     (log "in callback mode=********" mode)
     (log "in callback, links=" links)
@@ -206,8 +204,8 @@
     (reset!  app-state
             ;; TODO: use merge
             (assoc @app-state
-                   :parse-results
-                   (:parse-results my-map)
+                   :composition
+                   composition
                    :error
                    (:error my-map)
                    :browse-url
@@ -232,7 +230,7 @@
     (log "entering GENERATE-STAFF-NOTATION-URL" url content)
     (swap! app-state assoc :staff-notation-url nil)
     (swap! app-state assoc :ajax-is-running true)
-    (swap! app-state assoc :parse-results nil)
+    (swap! app-state assoc :composition nil)
 
     (let [ query-data (new goog.Uri/QueryData) ]
       ;; TODO: try sending json
@@ -498,7 +496,7 @@
 (defn display-parse-to-user-box []
   (let [error (get-in @app-state [:error])
         _ (log "in display-parse-to-user-box, error=" error)
-        parse-results (get-in @app-state [:parse-results])
+        parse-results (:composition @app-state)
         _ (log "in display-parse-to-user-box, parsed" parse-results)
         ]
     [:div.form-group
@@ -582,6 +580,9 @@
 (def my-val (reagent.core/atom ""))
 
 (defn on-key-press[evt] 
+  (if (not= :sargam-composition (get @app-state :composition-kind))
+     true 
+    (do
   (log "entering on-key-press")
   (let [
         my-key-map @key-map
@@ -625,7 +626,7 @@
         false)
       ;; else
       true )
-    ))
+    ))))
 
 (def stored-selection (reagent.core/atom nil))
 ;;{:start nil :end nil})
@@ -655,18 +656,18 @@
   [:img#staff_notation
    {:src (get @app-state :staff-notation-url)}])
 
-(defn composition[]
-  (let [parsed-map (:parse-results @app-state)] 
+(defn html-rendered-composition[]
+  (let [composition (:composition @app-state)] 
 
-    (if (not parsed-map)
+    (if (not composition)
       [:div.composition.doremiContent ]
       ;; else
       [:div.composition.doremiContent
-       (draw-children (rest (:parsed parsed-map)))]
+       (draw-children (rest composition))]
       )))
 
 
-(defn parse[]
+(defn zzzparse[]
   (when (by-id "the_area")
     (let [;; current (get @app-state :doremi-text)
           elem (by-id "the_area")
@@ -716,18 +717,12 @@
                         "rgmdn"))
            _ (comment "app/parse: notes-used=" notes-used)
            ]
-          (comment 
-            "my-parse-results" {:src "NotesUsed: SRGmPDnN\n\nS---- -\n", :parsed [:composition [:attribute-section "NotesUsed" "SRGmPDnN" "kind" :sargam-composition] [:stave [:notes-line [:measure [:beat [:pitch "C" [:octave 0]] [:dash] [:dash] [:dash] [:dash]] [:beat [:dash]]]]]], :attributes {:notesused "SRGmPDnN", :kind :sargam-composition}, :error nil})
-
-          ; {"src":"SS","lilypond":"#(ly:set-option 'midi-extension \"mid\")\n\\version \"2.12.3\"\n\\include \"english.ly\"\n\\header{ \n}\n%{\nSS\n%}\nmelody = {\n\\once \\override Staff.TimeSignature #'stencil = ##f\n\\clef treble\n\\key c \n\\major\n\\cadenzaOn\n  c'4[ c'4] \\break \n }\ntext = \\lyricmode {\n  \n}\n\\score{\n\n<<\n\\new Voice = \"one\" {\n\\set midiInstrument = #\"flute\"\n\\melody\n}\n\\new Lyrics \\lyricsto \"one\" \\text\n>>\n\\layout {\n\\context {\n\\Score\n}\n}\n\\midi {\n\\context {\n\\Score\ntempoWholesPerMinute = #(ly:make-moment 100 4)\n}\n}\n}","parsed":["composition",["attribute-section","kind","sargam-composition"],["stave",["notes-line",["measure",["beat",["pitch","C",["octave",0]],["pitch","C",["octave",0]]]]]]],"attributes":{"kind":"sargam-composition"},"error":null}
-
-
           (log "****in parse, parse-results are")
           (log  my-parse-results)
           (log "in parse, app-state=")
           (log @app-state)
           (sargam-set->key-map  notes-used)
-          (swap! app-state assoc-in [:parse-results] my-parse-results)
+      ;    (swap! app-state assoc [:parse-results] my-parse-results)
           (swap! app-state assoc-in [:last-text-parsed] current)
           )
         ))))
@@ -740,7 +735,7 @@
     :on-click 
     (fn [e]
       (.preventDefault e)
-      (parse)
+     ;; TODO (parse)
       )
     }
    "Redraw"
@@ -773,7 +768,8 @@
 
     ))
 (defn start-parse-timer[]
-  (js/setInterval parse 60000))
+ ;; (js/setInterval zzzparse 60000)
+  )
 
 
 ;;;;  add-right-margin-to-notes-with-pitch-signs = function(context) {
@@ -943,7 +939,7 @@
   ;;145 dubois
   )
 (def composition-wrapper 
-  (with-meta composition
+  (with-meta html-rendered-composition
              {:component-did-mount
               (fn[this]
                 (log "component-did-mount composition to call dom_fixes")
