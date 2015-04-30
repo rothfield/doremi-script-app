@@ -4,7 +4,7 @@ git pull
 echo "cleaning target"
 rm -rf target
 echo "running boot cljs -O advanced"
-boot cljs -O advanced
+boot cljs -s -O advanced
 echo "minifying application.css and doremi.css in target/css.
 #Uses npm minify command"
 # sudo npm install -g minify 
@@ -19,9 +19,10 @@ cat bootstrap.min.css doremi.min.css application.min.css > app.min.css
 cd ..
 cd js
 echo "minifying "
-minify jquery.js
-minify bootstrap.js
-cat jquery.min.js bootstrap.min.js app.js > app.min.js
+#minify jquery.js
+#minify bootstrap.js
+#cat jquery.min.js bootstrap.min.js app.js > app.min.js
+cat app.js > app.min.js
 cd ..
 echo "adding async to script tag for app.js in index.html and changing app.js to app.min.js"
 sed -i 's/app.js\"/app.min.js\" async/g' index.html 
@@ -31,8 +32,8 @@ sed -i 's/DOREM_SCRIPT_APP_ENV=\"development\"/DOREM_SCRIPT_APP_ENV=\"production
 echo "adding manifest to html tag in index.html"
 echo "deleting stylesheet tags"
 sed -i 's#<link rel=\"stylesheet\".*># <!-- & --> #' index.html
-sed -i 's#<script src=\"js/jquery.js\".*>#<!-- & --> #' index.html
-sed -i 's#<script src=\"js/bootstrap.js\".*>#<!-- & --> #' index.html
+# sed -i 's#<script src=\"js/jquery.js\".*>#<!-- & --> #' index.html
+#sed -i 's#<script src=\"js/bootstrap.js\".*>#<!-- & --> #' index.html
 
 
 echo "adding stylesheet css/app.min.css"

@@ -11,7 +11,7 @@
  [org.clojure/clojure "1.6.0"]
  ;; [org.clojure/core.async "0.1.346.0-17112a-alpha"]
  [com.lucasbradstreet/instaparse-cljs "1.3.5"]
- [org.clojure/clojurescript "0.0-3126"]
+ ;;[org.clojure/clojurescript "0.0-3126"]
  [prismatic/dommy "1.0.0"]
 ;;; [servant "0.1.3"]
  [reagent "0.5.0"]])

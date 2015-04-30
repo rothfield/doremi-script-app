@@ -1,10 +1,11 @@
 (ns doremi-script-app.app
-  ;;(:require-macros 
+    ;;(:require-macros 
   (:require-macros [cljs.core :refer [assert]]
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
     [doremi-script-app.utils :refer [get-attributes keywordize-vector my-log2 my-log by-id log is-a] ]
+
    ;; [doremi-script-app.doremi_core :as doremi_core
     ;; :refer [doremi-text->collapsed-parse-tree]]
     [goog.Uri] 
@@ -201,36 +202,24 @@
                 notes-used-set-for
                 sargam-set->key-map ))) 
 
-    (reset!  app-state
-            ;; TODO: use merge
-            (assoc @app-state
-                   :composition
+    (swap!  app-state
+            assoc :composition
                    composition
                    :error
                    (:error my-map)
-                   :browse-url
-                   (:browse-url links)
-                   :pdf-url
-                   (:pdf-url links)
-                   :mp3-url
-                   (:mp3-url links)
-                   :staff-notation-url
-                   (:staff-notation-url links)
-                   :midi-url
-                   (:midi-url links)
-                   :lilypond-url
-                   (:lilypond-url links)
-                   :doremi-text-url
-                   (:doremi-text-url links)))
+                   :links
+                   links
+                   )
     (log "after xhr callback-app-state is" @app-state)
     ))
 
 (defn generate-staff-notation-xhr [url content]
   (when (not (:ajax-is-running @app-state))
     (log "entering GENERATE-STAFF-NOTATION-URL" url content)
-    (swap! app-state assoc :staff-notation-url nil)
-    (swap! app-state assoc :ajax-is-running true)
-    (swap! app-state assoc :composition nil)
+    (swap! app-state 
+           assoc :links nil
+     :ajax-is-running true
+      :composition nil)
 
     (let [ query-data (new goog.Uri/QueryData) ]
       ;; TODO: try sending json
@@ -467,31 +456,34 @@
   )
 
 (defn downloads[]
-  [:div.dropdown.downloads
-   [:button#dropdownMenu1.btn.btn-default.dropdown-toggle
-    {:aria-expanded "true", :data-toggle "dropdown", :type "button"}
-    "Links"
-    [:span.caret]]
-   [:ul.dropdown-menu
-    {:aria-labelledby "dropdownMenu1", :role "menu"}
-    [:li [:a {:href "browse" ;; TODO: have server provide list of links ALA rest
-              :target "_blank"
-              :tabIndex "-1", :role "menuitem"}
-          ]]
-    (if (:staff-notation-url @app-state)
+   [:select#downloads.form-control
+    {
+    :on-change (fn[evt]
+                 (.preventDefault evt)
+                 (.open js/window (.-value (.-target evt))))
+     :value "TODO"                         
+    } 
+    [:option
+     {:selected true
+
+      :value "TODO" }
+     "Links"]
+    (if (get-in @app-state [:links :staff-notation-url]) 
       (doall (map-indexed
-               (fn[idx z] 
-                 [:li
-                  {:role "presentation"
-                   :key idx}
-                  [:a
-                   {:href (or (z @app-state) "#") 
-                    :target "_blank"
-                    :tabIndex "-1", :role "menuitem"}
-                   (string/replace (name z) #"-url$"   "")]])
-               [:browse-url :pdf-url :mp3-url :midi-url :doremi-text-url :lilypond-url :staff-notation-url]))) 
-    ]]      
-  )
+               (fn[idx [k v]] 
+                 [:option
+                  {
+                   :value v
+                   :key idx
+                   }
+                  (string/replace (name k) "-url" "")
+                  ])
+             (get @app-state :links )))) 
+    
+             ;;  [:browse-url :pdf-url :mp3-url :midi-url :doremi-text-url :lilypond-url :staff-notation-url])))
+ ]) 
+
+  
 
 (defn display-parse-to-user-box []
   (let [error (get-in @app-state [:error])
@@ -654,7 +646,7 @@
 
 (defn staff-notation[]
   [:img#staff_notation
-   {:src (get @app-state :staff-notation-url)}])
+   {:src (get-in @app-state [:links :staff-notation-url])}])
 
 (defn html-rendered-composition[]
   (let [composition (:composition @app-state)] 
@@ -1568,7 +1560,6 @@
         (swap! app-state assoc :composition-kind my-kind)
         )
      } 
-    [:option]
     [:option {:value :abc-composition}
      "ABC"]
     [:option {:value :doremi-composition}
@@ -1593,7 +1584,6 @@
              (keyword (-> % .-target .-value))
              )
      }
-    [:option {:value nil}]
     [:option {:value :abc-composition}
      "ABC"]
     [:option {:value :doremi-composition}
