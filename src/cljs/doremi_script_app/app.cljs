@@ -1,12 +1,12 @@
 (ns doremi-script-app.app
-    ;;(:require-macros 
+  ;;(:require-macros 
   (:require-macros [cljs.core :refer [assert]]
                    ;;  [cljs.core.async.macros :refer [go]]
                    )
   (:require 
     [doremi-script-app.utils :refer [get-attributes keywordize-vector my-log2 my-log by-id log is-a] ]
 
-   ;; [doremi-script-app.doremi_core :as doremi_core
+    ;; [doremi-script-app.doremi_core :as doremi_core
     ;; :refer [doremi-text->collapsed-parse-tree]]
     [goog.Uri] 
     [goog.net.XhrIo]
@@ -203,13 +203,13 @@
                 sargam-set->key-map ))) 
 
     (swap!  app-state
-            assoc :composition
-                   composition
-                   :error
-                   (:error my-map)
-                   :links
-                   links
-                   )
+           assoc :composition
+           composition
+           :error
+           (:error my-map)
+           :links
+           links
+           )
     (log "after xhr callback-app-state is" @app-state)
     ))
 
@@ -218,8 +218,8 @@
     (log "entering GENERATE-STAFF-NOTATION-URL" url content)
     (swap! app-state 
            assoc :links nil
-     :ajax-is-running true
-      :composition nil)
+           :ajax-is-running true
+           :composition nil)
 
     (let [ query-data (new goog.Uri/QueryData) ]
       ;; TODO: try sending json
@@ -456,34 +456,35 @@
   )
 
 (defn downloads[]
-   [:select#downloads.form-control
-    {
+  [:select#downloads.form-control
+   {
     :on-change (fn[evt]
                  (.preventDefault evt)
                  (.open js/window (.-value (.-target evt))))
-     :value "TODO"                         
+    :value "TODO"                         
     } 
-    [:option
-     {:selected true
+   [:option
+    {:selected true
 
-      :value "TODO" }
-     "Links"]
-    (if (get-in @app-state [:links :staff-notation-url]) 
-      (doall (map-indexed
-               (fn[idx [k v]] 
-                 [:option
-                  {
-                   :value v
-                   :key idx
-                   }
-                  (string/replace (name k) "-url" "")
-                  ])
-             (get @app-state :links )))) 
-    
-             ;;  [:browse-url :pdf-url :mp3-url :midi-url :doremi-text-url :lilypond-url :staff-notation-url])))
- ]) 
+     :value "TODO" }
+    "Links"]
+   (when-let [links (get-in @app-state [:links :staff-notation-url])] 
+     (doall (map-indexed
+              (fn[idx [k v]] 
+                [:option
+                 {
+                  :value v
+                  :key idx
+                  }
+                 (string/replace (name k) "-url" "")
+                 ])
+              links
+              ))) 
 
-  
+   ;;  [:browse-url :pdf-url :mp3-url :midi-url :doremi-text-url :lilypond-url :staff-notation-url])))
+   ]) 
+
+
 
 (defn display-parse-to-user-box []
   (let [error (get-in @app-state [:error])
@@ -573,52 +574,52 @@
 
 (defn on-key-press[evt] 
   (if (not= :sargam-composition (get @app-state :composition-kind))
-     true 
+    true 
     (do
-  (log "entering on-key-press")
-  (let [
-        my-key-map @key-map
-        target (.-target evt)
-        key-code (.-keyCode evt)
-        ctrl-key? (or (.-ctrlKey evt)
-                      (.-altKey evt)
-                      (.-metaKey evt))
-        from-char-code-fn (.-fromCharCode js/String)
-        ch (from-char-code-fn key-code)
-        ; _ (log "evt is" evt) 
-        ; _ (comment "ch is ****" ch)
-        ; _ (comment "my-key-map is" my-key-map)
-        new-char (if-not ctrl-key?  (get my-key-map ch ))
-        ; _ (comment "new-char ****" new-char " *********")
-        caret-pos (.-selectionStart target)
-        ; _ (comment "caret-pos" caret-pos)
-        ;; var caretPos = document.getElementById("txt").selectionStart;
-        text-area-text (.-value target)
-        ; _ (comment "text-area-text=" text-area-text) 
-        selection (get-selection target)
-        ; _ (comment "selection is" selection)
-        my-within-sargam-line (within-sargam-line? text-area-text (:start selection))
-        ; _ (comment "my-within-sargam-line=" my-within-sargam-line)
-        ]
-    ;;; nativeEvent looks like  {which: 189, keyCode: 189, charCode: 0, repeat: false, metaKey: false…}
-    (comment "app-state is" @app-state)
-    ;;  jQuery("#txt").val(textAreaTxt.substring(0, caretPos) + txtToAdd + textAreaTxt.substring(caretPos) );
-    (if (and my-within-sargam-line
-             new-char)
-      (do
-        ;; (.preventDefault evt)
-        (set! (.-value target)
-              (str (.substring text-area-text 0 caret-pos) 
-                   new-char 
-                   (.substring text-area-text caret-pos)))
-        (set! (.-selectionStart target)
-              (inc (:start selection)))
-        (set! (.-selectionEnd target)
-              (inc (:end selection)))
-        false)
-      ;; else
-      true )
-    ))))
+      (log "entering on-key-press")
+      (let [
+            my-key-map @key-map
+            target (.-target evt)
+            key-code (.-keyCode evt)
+            ctrl-key? (or (.-ctrlKey evt)
+                          (.-altKey evt)
+                          (.-metaKey evt))
+            from-char-code-fn (.-fromCharCode js/String)
+            ch (from-char-code-fn key-code)
+            ; _ (log "evt is" evt) 
+            ; _ (comment "ch is ****" ch)
+            ; _ (comment "my-key-map is" my-key-map)
+            new-char (if-not ctrl-key?  (get my-key-map ch ))
+            ; _ (comment "new-char ****" new-char " *********")
+            caret-pos (.-selectionStart target)
+            ; _ (comment "caret-pos" caret-pos)
+            ;; var caretPos = document.getElementById("txt").selectionStart;
+            text-area-text (.-value target)
+            ; _ (comment "text-area-text=" text-area-text) 
+            selection (get-selection target)
+            ; _ (comment "selection is" selection)
+            my-within-sargam-line (within-sargam-line? text-area-text (:start selection))
+            ; _ (comment "my-within-sargam-line=" my-within-sargam-line)
+            ]
+        ;;; nativeEvent looks like  {which: 189, keyCode: 189, charCode: 0, repeat: false, metaKey: false…}
+        (comment "app-state is" @app-state)
+        ;;  jQuery("#txt").val(textAreaTxt.substring(0, caretPos) + txtToAdd + textAreaTxt.substring(caretPos) );
+        (if (and my-within-sargam-line
+                 new-char)
+          (do
+            ;; (.preventDefault evt)
+            (set! (.-value target)
+                  (str (.substring text-area-text 0 caret-pos) 
+                       new-char 
+                       (.substring text-area-text caret-pos)))
+            (set! (.-selectionStart target)
+                  (inc (:start selection)))
+            (set! (.-selectionEnd target)
+                  (inc (:end selection)))
+            false)
+          ;; else
+          true )
+        ))))
 
 (def stored-selection (reagent.core/atom nil))
 ;;{:start nil :end nil})
@@ -714,7 +715,7 @@
           (log "in parse, app-state=")
           (log @app-state)
           (sargam-set->key-map  notes-used)
-      ;    (swap! app-state assoc [:parse-results] my-parse-results)
+          ;    (swap! app-state assoc [:parse-results] my-parse-results)
           (swap! app-state assoc-in [:last-text-parsed] current)
           )
         ))))
@@ -727,7 +728,7 @@
     :on-click 
     (fn [e]
       (.preventDefault e)
-     ;; TODO (parse)
+      ;; TODO (parse)
       )
     }
    "Redraw"
@@ -760,7 +761,7 @@
 
     ))
 (defn start-parse-timer[]
- ;; (js/setInterval zzzparse 60000)
+  ;; (js/setInterval zzzparse 60000)
   )
 
 
@@ -1670,12 +1671,16 @@
   )
 
 (defn audio-div[]
-  [:audio#audio
-   {
-    :controls "controls"
-    :preload "auto",
-    :src (:mp3-url @app-state)}]
-  )
+    (prn "yyy")
+  (when-let [mp3-url (get-in @app-state [:links :mp3-url])]
+    (prn "zzz")
+    [:audio#audio
+     {
+      :controls "controls"
+      :preload "auto",
+      :src mp3-url
+      }]
+    ))
 
 (defn controls[]
   [:form.form-inline
@@ -1683,8 +1688,7 @@
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
    [downloads]
-   (if (:mp3-url @app-state)
-     [audio-div])
+     [audio-div]
    ]
   )
 
