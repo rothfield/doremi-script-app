@@ -119,6 +119,7 @@
   )
 
 (defonce key-map (reagent.core/atom {}))
+(defonce printing (reagent.core/atom false))
 
 (defonce app-state
   (reagent.core/atom 
@@ -492,7 +493,7 @@
         parse-results (:composition @app-state)
         _ (log "in display-parse-to-user-box, parsed" parse-results)
         ]
-    [:div.form-group
+    [:div.form-group.hidden-print
      {
       :class (if error "has-error" "") 
       }
@@ -627,7 +628,7 @@
 
 
 (defn entry-area-box[]
-  [:div.form-group
+  [:div.form-group.hidden-print
    [:label {:for "entryArea"} "Enter Letter Notation Source:"]
    [:textarea#the_area.entryArea.form-control
     {
@@ -646,8 +647,9 @@
            items)))
 
 (defn staff-notation[]
-  [:img#staff_notation
-   {:src (get-in @app-state [:links :staff-notation-url])}])
+  [:img#staff_notation.hidden-print 
+   {:class (if @printing "printing" "")
+   :src (get-in @app-state [:links :staff-notation-url])}])
 
 (defn html-rendered-composition[]
   (let [composition (:composition @app-state)] 
@@ -655,7 +657,8 @@
     (if (not composition)
       [:div.composition.doremiContent ]
       ;; else
-      [:div.composition.doremiContent
+      [:div.composition.doremiContent {:class (if @printing "printing"
+                                                 "")}
        (draw-children (rest composition))]
       )))
 
@@ -951,7 +954,7 @@
 
 (defn composition-box[]
   [:div.form-group
-   [:label {:for "entryArea"} "Rendered Letter Notation: "]
+   [:label.hidden-print {:for "entryArea"} "Rendered Letter Notation: "]
    ;; [parse-button]  TODO: put back in or NOT ???!!!
    [composition-wrapper]
    ] 
@@ -1596,6 +1599,20 @@
     [:option {:value :sargam-composition}
      "sargam"]]]
   )
+(defn print-toggle[]
+  [:button.btn.btn-primary
+   {
+    :title ""
+    :name "printTogle"
+    :on-click 
+    (fn [e]
+      (.preventDefault e)
+      (swap! printing not)
+      )
+    }
+   "Print Toggle"
+   ] 
+  )
 
 (defn generate-staff-notation-button[]
   [:button.btn.btn-primary
@@ -1681,12 +1698,13 @@
     ))
 
 (defn controls[]
-  [:form.form-inline
+  [:form.form-inline.hidden-print
    [select-notation-box (get @app-state :kind)]
    [render-as-box (get @app-state :render-as)]
    [generate-staff-notation-button]
    [downloads]
-     [audio-div]
+   [audio-div]
+   [print-toggle]
    ]
   )
 

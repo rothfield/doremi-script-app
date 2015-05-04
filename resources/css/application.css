@@ -10,9 +10,15 @@ div.has-error #parse-results {
 div.downloads {
   display:inline-block;
 }
+@media print {
+div.composition {
+ height:auto !important;
+ border: none !important;
+}
+}
+ /* height:175px;   or set for printing initial */
 div.composition {
   overflow:auto;
-  height:175px;
 	resize:both;
 	border: 1px black solid;
 }
