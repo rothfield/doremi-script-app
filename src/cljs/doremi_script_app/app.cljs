@@ -521,7 +521,7 @@
 
      :value "TODO" }
     "Links"]
-   (when-let [links (get-in @app-state [:links :staff-notation-url])] 
+   (when-let [links (get-in @app-state [:links])] 
      (doall (map-indexed
               (fn[idx [k v]] 
                 [:option
