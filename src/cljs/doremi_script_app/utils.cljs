@@ -15,7 +15,7 @@
 ;;
 (defn is?[s v]
   assert(= (name (first v)) (name s)))
-
+;; TODO: DRY
 (defn is-a[s v]
   assert(= (name (first v)) (name s)))
 
