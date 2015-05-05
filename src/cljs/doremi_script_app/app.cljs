@@ -1058,8 +1058,16 @@ Use dots above/below notes for octave indicators."
   [:span.slur {:id (second item)}]
   )
 
+(defn needs-kommal-indicator?[normalized-pitch kind]
+  (log "entering needs-kommal-indicator," normalized-pitch kind)
+  (assert (string? normalized-pitch))
+  (assert (keyword? kind))
+  (and (= kind :hindi-composition)
+       (#{"Db" "Eb" "Ab" "Bb"} normalized-pitch))) 
+
 (defn pitch[{item :item
              render-as :render-as}]
+ (log "entering pitch, item=" item) 
   ;; gnarly code here.
   (log "pitch, (first (last item))=" (first (last item))) 
 
@@ -1080,6 +1088,7 @@ Use dots above/below notes for octave indicators."
   (log item)
   ;; need to sort attributes in order:
   ;; ornament octave syl note alteration
+  ;; TODO: refactor. Hard to understand.
   (let [
         ;; Looks like ["end-slur-id",0]
         begin-slur-id (some (fn[x] 
@@ -1094,12 +1103,15 @@ Use dots above/below notes for octave indicators."
                                    (= :end-slur-id (first x)))
                               x))
                           item)
-        _ (log "end-slur-id=" end-slur-id)
         h (if end-slur-id
             {:data-begin-slur-id (second end-slur-id) }
             {}
             :class (css-class-name-for (first item)) 
             )
+        kommal-indicator 
+        (when (needs-kommal-indicator? (second item)
+                                              render-as)
+                           [:kommal-indicator])
         deconstructed-pitch ;; C#,sargam -> ["S" "#"] 
         (deconstruct-pitch-string-by-kind (second item)
                                           render-as
@@ -1108,11 +1120,12 @@ Use dots above/below notes for octave indicators."
         {:ornament 1 
          :octave 2 
          :syl 3 
-         :begin-slur-id 4
-         :slur 5
-         :pitch-name 6
-         :pitch 7
-         :pitch-alteration 8}
+         :kommal-indicator 4
+         :begin-slur-id 5 
+         :slur 6 
+         :pitch-name 7
+         :pitch 8 
+         :pitch-alteration 9}
         item1
         (into[] (cons [:pitch-name (first deconstructed-pitch)]
                       (rest (rest item))))
@@ -1128,7 +1141,8 @@ Use dots above/below notes for octave indicators."
         (remove nil? (into[] (cons my-pitch-alteration item2)))
         item5
         (remove (fn[x] (get #{:end-slur-id :slur} (first x))) item4)
-        item6 (sort-by #(get sort-table (first %)) item5)
+        item5a (remove nil? (into [] (cons kommal-indicator item5)))
+        item6 (sort-by #(get sort-table (first %)) item5a)
         ]
     (log "item6 is")
     ;;[["pitch-name","D#"],["octave",1],["syl","syl"]] 
@@ -1210,6 +1224,16 @@ Use dots above/below notes for octave indicators."
               } ]
       )))
 
+(defn kommal-indicator[{item :item}]
+  (assert (is-a "kommal-indicator" item))
+    [:span.kommalIndicator
+    "_"]
+    )
+
+  ;;      kommalIndicator = span({
+   ;;       key: 99,
+    ;;      className: "kommalIndicator"
+     ;;   }, "_");
 
 (defn draw-item[item idx]
   (let [my-key  (first item)]
@@ -1232,6 +1256,8 @@ Use dots above/below notes for octave indicators."
       [tala {:key idx :item item}]
       (= my-key :chord)
       [chord {:key idx :item item}]
+      (= my-key :kommal-indicator)
+      [kommal-indicator {:key idx :item item}]
       (= my-key :syl)
       [syl {:key idx :item item}]
       (= my-key :beat)
