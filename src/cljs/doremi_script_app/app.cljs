@@ -660,6 +660,7 @@ Use dots above/below notes for octave indicators."
 (defn entry-area-box[]
   [:div.form-group.hidden-print
    [:label {:for "entryArea"} "Enter Letter Notation Source:"]
+   [parse-button]
    [:textarea#the_area.entryArea.form-control
     {
      :autofocus true
@@ -702,7 +703,7 @@ Use dots above/below notes for octave indicators."
     :on-click 
     (fn [e]
       (.preventDefault e)
-      ;; TODO (parse)
+      (parse)
       )
     }
    "Redraw"
@@ -732,7 +733,7 @@ Use dots above/below notes for octave indicators."
 
 (def seconds 1000)
 (defn start-parse-timer[]
-  (js/setInterval parse (* 5 seconds))
+  (js/setInterval parse (* 6 seconds))
   )
 
 
@@ -1028,7 +1029,7 @@ Use dots above/below notes for octave indicators."
 
 (defn pitch-name[{item :item}]
   ;; (assert (is-a "pitch-name" item))
-  (when true
+  (when false
   (println "pitch-name, item is")
   (println item)
   (println (second item)))
@@ -1104,7 +1105,6 @@ Use dots above/below notes for octave indicators."
         (deconstruct-pitch-string-by-kind (second item)
                                           render-as
                                           ) 
-        _ (println "deconstructed-pitch=" deconstructed-pitch)
         sort-table 
         {:ornament 1 
          :octave 2 
@@ -1430,6 +1430,6 @@ Use dots above/below notes for octave indicators."
           )
     (if old-val
       (set! (.-value (sel1 :#the_area)) old-val))
-    (start-parse-timer)
+   ;; (start-parse-timer)
     ))
 
