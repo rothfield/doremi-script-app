@@ -472,26 +472,27 @@
                     "B#" ["T", sharp-symbol]
                     })
 
-(defn deconstruct-pitch-string-by-kind[pitch kind]
-  ;; TODO: multi-method or similar here
-  (log "deconstruct-pitch-string-by-kind" " kind is:" kind) 
-  (log "pitch is")
-  (log pitch)
-  (case kind
-    :sargam-composition
-    (get lookup-sargam pitch)
-    :number-composition
-    (get lookup-number pitch)
-    :abc-composition
-    (get lookup-ABC pitch)
-    :doremi-composition
-    (get lookup-DoReMi pitch)
-    :hindi-composition
-    (get lookup-hindi pitch)
-    ;;default:
-    (get lookup-sargam pitch)
-    )
-  )
+;; not sure if using multi-methods is better than a case statement
+(defmulti deconstruct-pitch-string-by-kind (fn [pitch kind] kind))
+
+(defmethod deconstruct-pitch-string-by-kind :sargam-composition [pitch kind]
+    (get lookup-sargam pitch))
+
+(defmethod deconstruct-pitch-string-by-kind :number-composition [pitch kind]
+    (get lookup-number pitch))
+
+(defmethod deconstruct-pitch-string-by-kind :abc-composition [pitch kind]
+    (get lookup-ABC pitch))
+
+(defmethod deconstruct-pitch-string-by-kind :doremi-composition [pitch kind]
+    (get lookup-DoReMi pitch))
+
+(defmethod deconstruct-pitch-string-by-kind :hindi-composition [pitch kind]
+    (get lookup-hindi pitch))
+
+(defmethod deconstruct-pitch-string-by-kind :default [pitch _]
+    (get lookup-sargam pitch))
+
 
 (def mordent-entity "&#x1D19D&#x1D19D")
 
@@ -532,8 +533,6 @@
                  ])
               links
               ))) 
-
-   ;;  [:browse-url :pdf-url :mp3-url :midi-url :doremi-text-url :lilypond-url :staff-notation-url])))
    ]) 
 
 
@@ -1331,7 +1330,7 @@ Use dots above/below notes for octave indicators."
   [:button.btn.btn-primary
    {
     :title "Toggle font size for rendered letter notation"
-    :name "printTogle"
+    :name "font_toggle"
     :on-click 
     (fn [e]
       (.preventDefault e)
