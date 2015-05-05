@@ -656,11 +656,24 @@ Use dots above/below notes for octave indicators."
           true )
         ))))
 
+(defn parse-button[]
+  [:button.btn.btn-primary
+   {
+    :title "Redraw Letter Notation",
+    :name "redraw_letter_notation"
+    :on-click 
+    (fn [e]
+      (.preventDefault e)
+      (parse)
+      )
+    }
+   "Redraw"
+   ] 
+  )
 
 (defn entry-area-box[]
   [:div.form-group.hidden-print
    [:label {:for "entryArea"} "Enter Letter Notation Source:"]
-   [parse-button]
    [:textarea#the_area.entryArea.form-control
     {
      :autofocus true
@@ -695,20 +708,6 @@ Use dots above/below notes for octave indicators."
 
 
 
-(defn parse-button[]
-  [:button.btn.btn-primary
-   {
-    :title "Redraw Letter Notation",
-    :name "redraw_letter_notation"
-    :on-click 
-    (fn [e]
-      (.preventDefault e)
-      (parse)
-      )
-    }
-   "Redraw"
-   ] 
-  )
 
 
 
@@ -891,7 +890,7 @@ Use dots above/below notes for octave indicators."
 (defn composition-box[]
   [:div.form-group
    [:label.hidden-print {:for "entryArea"} "Rendered Letter Notation: "]
-   ;; [parse-button]  
+   [parse-button]  
    [composition-wrapper]
    ] 
   )
@@ -1360,8 +1359,8 @@ Use dots above/below notes for octave indicators."
         ))
     }
    (if (:ajax-is-running @app-state)
-     "Redrawing..."
-     "Redraw" ;; "Generate Staff Notation and audio"
+     "Generating staff notation... Please wait. This may take some time..."
+     "Generate Staff Notation and audio..."
      )
    ] 
   )
